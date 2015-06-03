@@ -72,7 +72,7 @@ int ssym[256];
 
 
 int main(int argc, const char * argv[]) {
-    printf("Alan rocks!!!\n");
+    
     return 0;
     
 }
