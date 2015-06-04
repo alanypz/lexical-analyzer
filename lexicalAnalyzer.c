@@ -11,6 +11,7 @@
 //
 
 #include <stdio.h>
+#include <stdlib.h>
 
 //  Constant declarations.
 
@@ -19,6 +20,8 @@
 #define cmax    11
 #define nestmax 5
 #define strmax  256
+
+#define START_SIZE  256
 
 //  I/O file names.
 
@@ -70,9 +73,60 @@ int wsym[]={
 
 int ssym[256];
 
+//  Global pointer to output file.
+
+//static FILE *ofp = NULL;
+
+//  Function declaration.
+
+char* initialize();
 
 int main(int argc, const char * argv[]) {
     
+    //  Method call to read input.
+    
+    char *code = initialize();
+    
+    printf("%s", code);
+    
+    //  Free allocated memory.
+    
+    free(code);
+    
     return 0;
+    
+}
+
+//
+//  Reads input file (PL/0 code) to string and return char pointer.
+//
+//  @return
+//      char*, pointer to the first character in the String.
+//
+char* initialize() {
+    
+    char *head = (char *)malloc(START_SIZE);
+    char *index = head;
+    char c;
+    
+    FILE *ifp = fopen(INPUT_FILE, "r");
+    
+    if ( head )
+    
+        while ( (c = getc(ifp)) != EOF ) {
+        
+            if ( !index )
+            
+                head = (char *)realloc(head,START_SIZE);
+        
+            *index++ = c;
+            
+        }
+    
+    // /* Reallocating memory */
+    // str = (char *) realloc(str, 25);
+    // strcat(str, ".com");
+    
+    return head;
     
 }
