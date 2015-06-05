@@ -111,7 +111,6 @@ int main(int argc, const char * argv[]) {
     }
     
     fprintf(cleanOutput,"%s",codeNoComments);
-    system("pause");
     
     //  Free allocated memory.
     free(code);
