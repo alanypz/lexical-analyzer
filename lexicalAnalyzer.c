@@ -86,8 +86,11 @@ int main(int argc, const char * argv[]) {
     char* codeNoComments;
     
     //  Method call to read input.
+    
     char *code = initialize();
     codeNoComments = code;
+    
+    printf("%s\n", code);
     
     //Clean-input
     while(*code != '\0')
@@ -104,12 +107,13 @@ int main(int argc, const char * argv[]) {
             code+=2;
         }
         
+        ++code;
     }
-        
-    fprintf(cleanOutput,"%s",codeNoComments);
+    
+    fprintf(cleanOutput,"%s\n",codeNoComments);
     
     //  Free allocated memory.
-    free(code);
+//    free(code);
     
     //  Close file for writing
     fclose(cleanOutput);
@@ -157,15 +161,18 @@ char* initialize( )
     char c;
     
     if ( head )
-        
+    {
         while ( (c = getc(ifp)) != EOF )
             
             *index++ = c;
     
+        *index = '\0';
+        
+    }
     else
         
         printf("Error: Memory allocation failed.\n");
-    
+        
     return head;
     
 }
