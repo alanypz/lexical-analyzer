@@ -109,7 +109,7 @@ int main(int argc, const char * argv[]) {
     
         ++code;
     }
-   
+    
     fprintf(cleanOutput,"%s",codeNoComments);
     system("pause");
     
