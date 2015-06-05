@@ -8,8 +8,6 @@
 //  Team Members:
 //  Justin Mackenzie
 //  Alan Yepez
-//
-//added
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -75,6 +73,7 @@ int wsym[]={
 int ssym[256];
 
 //  Global pointer to output file.
+FILE* cleanOutput = NULL;
 
 //static FILE *ofp = NULL;
 
@@ -85,16 +84,40 @@ int foo(FILE* fptr);
 
 int main(int argc, const char * argv[]) {
     
+    //Declare and initialize variables
+    cleanOutput = fopen(CLEAN_OUTPUT_FILE, "w");
+    char* codeNoComments;
+    
     //  Method call to read input.
-    
     char *code = initialize();
-    printf("%s", code);
+    codeNoComments = code;
     
+    //Clean-input
+    while(*code != '\0')
+    {
+        if(*code == '/' && *(code + 1) == '*')
+        {
+            while(*code != '*' || *(code + 1) != '/')
+            {
+                *code = ' ';
+                ++code;
+            }
+            *code = ' ';
+            *(code+1) = ' ';
+            code+=2;
+        }
+    
+        ++code;
+    }
+   
+    fprintf(cleanOutput,"%s",codeNoComments);
     system("pause");
     
     //  Free allocated memory.
-    
     free(code);
+    
+    //  Close file for writing
+    fclose(cleanOutput);
     
     return 0;
     
