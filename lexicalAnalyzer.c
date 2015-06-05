@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 //  Constant declarations.
 
@@ -21,7 +22,7 @@
 #define nestmax 5
 #define strmax  256
 
-#define START_SIZE  256
+#define START_SIZE  2
 
 //  I/O file names.
 
@@ -80,14 +81,16 @@ int ssym[256];
 //  Function declaration.
 
 char* initialize();
+int foo(FILE* fptr);
 
 int main(int argc, const char * argv[]) {
     
     //  Method call to read input.
     
     char *code = initialize();
-    
     printf("%s", code);
+    
+    system("pause");
     
     //  Free allocated memory.
     
@@ -105,28 +108,38 @@ int main(int argc, const char * argv[]) {
 //
 char* initialize() {
     
-    char *head = (char *)malloc(START_SIZE);
-    char *index = head;
+    char *head = NULL;
+    char *index = NULL;
     char c;
+    int i = 0;
+    int size = 0;
     
-    FILE *ifp = fopen(INPUT_FILE, "r");
+    FILE* ifp = fopen(INPUT_FILE, "r");
+    size = foo(ifp);
+    ifp = fopen(INPUT_FILE, "r");
     
-    if ( head )
+    head = (char *)malloc(size);
+    index = head;
     
-        while ( (c = getc(ifp)) != EOF ) {
-        
-            if ( !index )
-            
-                head = (char *)realloc(head,START_SIZE);
-        
-            *index++ = c;
-            
-        }
-    
-    // /* Reallocating memory */
-    // str = (char *) realloc(str, 25);
-    // strcat(str, ".com");
+    for(i=0;i<size;i++)
+    {
+        *index++ = fgetc(ifp);
+    }
+    *index = '\0';
     
     return head;
     
 }
+
+int foo(FILE* fptr)
+{
+    char c;
+    int size = 0;
+    while( (c = fgetc(fptr)) != EOF)
+    {
+        ++size;
+    }
+    
+    return size;
+}
+    
