@@ -113,7 +113,7 @@ int main(int argc, const char * argv[]) {
     fprintf(cleanOutput,"%s\n",codeNoComments);
     
     //  Free allocated memory.
-//    free(code);
+    free(codeNoComments);
     
     //  Close file for writing
     fclose(cleanOutput);
