@@ -8,8 +8,6 @@
 //  Team Members:
 //  Justin Mackenzie
 //  Alan Yepez
-//
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -73,6 +71,7 @@ int wsym[]={
 int ssym[256];
 
 //  Global pointer to output file.
+FILE* cleanOutput = NULL;
 
 //static FILE *ofp = NULL;
 
@@ -82,15 +81,38 @@ char* initialize();
 
 int main(int argc, const char * argv[]) {
     
+    //Declare and initialize variables
+    cleanOutput = fopen(CLEAN_OUTPUT_FILE, "w");
+    char* codeNoComments;
+    
     //  Method call to read input.
-    
     char *code = initialize();
+    codeNoComments = code;
     
-    printf("%s", code); //  test print
+    //Clean-input
+    while(*code != '\0')
+    {
+        if(*code == '/' && *(code + 1) == '*')
+        {
+            while(*code != '*' || *(code + 1) != '/')
+            {
+                *code = ' ';
+                ++code;
+            }
+            *code = ' ';
+            *(code+1) = ' ';
+            code+=2;
+        }
+        
+    }
+        
+    fprintf(cleanOutput,"%s",codeNoComments);
     
     //  Free allocated memory.
-    
     free(code);
+    
+    //  Close file for writing
+    fclose(cleanOutput);
     
     return 0;
     
@@ -102,13 +124,14 @@ int main(int argc, const char * argv[]) {
 //  @return
 //      char*, pointer to the first character in the String.
 //
-char* initialize() {
+char* initialize( )
+{
     
     char *head = NULL;
     
     //  Create pointer to input file.
     
-    FILE *ifp = fopen(INPUT_FILE, "r");
+    FILE* ifp = fopen(INPUT_FILE, "r");
     
     //  Return null if file could not be read.
     
@@ -122,11 +145,11 @@ char* initialize() {
     }
     
     //  Determine the length of the input file.
-
+    
     fseek(ifp, 0, SEEK_END);
     int len = (int)ftell(ifp);
     fseek(ifp, 0, SEEK_SET);
-        
+    
     //  Dynamically size string.
     
     head = (char *)calloc(len + 1, sizeof(char));
@@ -134,7 +157,7 @@ char* initialize() {
     char c;
     
     if ( head )
-    
+        
         while ( (c = getc(ifp)) != EOF )
             
             *index++ = c;
