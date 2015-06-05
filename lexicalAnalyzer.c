@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 //  Constant declarations.
 
@@ -20,8 +21,6 @@
 #define cmax    11
 #define nestmax 5
 #define strmax  256
-
-#define START_SIZE  256
 
 //  I/O file names.
 
@@ -87,7 +86,7 @@ int main(int argc, const char * argv[]) {
     
     char *code = initialize();
     
-    printf("%s", code);
+    printf("%s", code); //  test print
     
     //  Free allocated memory.
     
@@ -105,27 +104,44 @@ int main(int argc, const char * argv[]) {
 //
 char* initialize() {
     
-    char *head = (char *)malloc(START_SIZE);
-    char *index = head;
-    char c;
+    char *head = NULL;
+    
+    //  Create pointer to input file.
     
     FILE *ifp = fopen(INPUT_FILE, "r");
     
+    //  Return null if file could not be read.
+    
+    if (!ifp)
+    {
+        
+        printf("Error: File not found.\n");
+        
+        return head;
+        
+    }
+    
+    //  Determine the length of the input file.
+
+    fseek(ifp, 0, SEEK_END);
+    int len = (int)ftell(ifp);
+    fseek(ifp, 0, SEEK_SET);
+        
+    //  Dynamically size string.
+    
+    head = (char *)calloc(len + 1, sizeof(char));
+    char *index = head;
+    char c;
+    
     if ( head )
     
-        while ( (c = getc(ifp)) != EOF ) {
-        
-            if ( !index )
+        while ( (c = getc(ifp)) != EOF )
             
-                head = (char *)realloc(head,START_SIZE);
-        
             *index++ = c;
-            
-        }
     
-    // /* Reallocating memory */
-    // str = (char *) realloc(str, 25);
-    // strcat(str, ".com");
+    else
+        
+        printf("Error: Memory allocation failed.\n");
     
     return head;
     
