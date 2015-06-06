@@ -57,7 +57,7 @@ typedef struct symbolTable{
 //  Token-Struct definition
 typedef struct tokenStruct{
     
-    char tokenStr[];
+    char tokenStr[11];
     struct tokenStruct* next;
 }token;
 
@@ -86,12 +86,15 @@ FILE* cleanOutput = NULL;
 //  Function declaration.
 
 char* initialize();
+void lexical(char codeNoComments[]);
+int wasDigit(token *head, char *code, int index);
+int wasAlpha(token *head, char *code, int index);
+int wasSymbol(token *head, char *code, int index);
 
 int main(int argc, const char * argv[]) {
     
     //Declare and initialize variables
     cleanOutput = fopen(CLEAN_OUTPUT_FILE, "w");
-    char* temp;
     int i,j;
     //  Method call to read input.
     
@@ -117,6 +120,8 @@ int main(int argc, const char * argv[]) {
         codeNoComments[j++] = code[i];
     }
     
+    
+    lexical(codeNoComments);
     
     fprintf(cleanOutput,"%s\n",codeNoComments);
     
@@ -165,7 +170,7 @@ char* initialize( )
     
     //  Dynamically size string.
     
-    head = (char *)calloc(len + 1, sizeof(char));
+    head = (char*)calloc(len + 1, sizeof(char));
     char *index = head;
     char c;
     
@@ -185,5 +190,93 @@ char* initialize( )
     return head;
     
 }
+
+void lexical(char *code)
+{
+    
+    token *head = (token*)malloc(sizeof(token));
+    head->next = NULL;
+    
+    int index = 0;
+    char sym = '\0';
+    
+    while ( index < strlen(code) )
+    {
+        
+        sym = code[index];
+        
+        if ( isdigit(sym) )
+        {
+            
+            index = wasDigit(head, code, index);
+            
+        }
+        else if ( isalpha(sym) )
+        {
+            
+            index = wasAlpha(head, code, index);
+            
+        }
+        else if( ispunct(sym) )
+        {
+            
+            index = wasSymbol(head, code, index);
+            
+        }
+        else
+        {
+            
+            
+        }
+        
+    }
+    
+}
+
+
+int wasDigit(token *head, char code[], int index)
+{
+ 
+    int i = 0;
+    
+    token *temp = head;
+    
+    while (temp != NULL)
+        
+        temp = temp->next;
+        
+    temp = (token*)malloc(sizeof(token));
+    temp->next = NULL;
+    temp->tokenStr[i];
+    
+    while ( isdigit(code[++i]) )
+    {
+        temp->tokenStr[i] = code[i];
+        
+    }
+    
+    return index + i;
+    
+}
+
+int wasAlpha(token *head, char* code, int index)
+{
+    int i;
+    
+    
+    
+    return index + i;
+    
+}
+
+int wasSymbol(token *head, char* code, int index)
+{
+    int i;
+    
+    return index + i;
+    
+}
+
+
 
 
