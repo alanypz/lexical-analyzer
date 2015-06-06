@@ -54,7 +54,7 @@ typedef struct symbolTable{
 //  Token-Struct definition
 typedef struct tokenStruct{
     
-    char tokenStr[11];
+    char* tokenStr;
     struct tokenStruct* next;
     
 }token;
@@ -279,6 +279,8 @@ void analyzer(char *code)
 //
 int wasDigit(token *head, char* code, int index)
 {
+    //  Max length of digit
+    maxDigit = 5;
     
     //  Method call to allocate token struct node.
     token *temp = createToken(head);
@@ -288,6 +290,11 @@ int wasDigit(token *head, char* code, int index)
     //  TODO: Add logic to prevent out-of-bounds error.
     while ( isdigit(code[++i]) )
     {
+        if(strlen(temp->tokenStr) >= maxDigit)
+        {   
+            maxDigit*=2;
+            temp->tokenStr = realloc(temp->tokenStr, maxDigit);   
+        }   
         temp->tokenStr[i] = code[i];
         
     }
@@ -336,13 +343,27 @@ token* createToken(token *head)
 //
 int wasAlpha(token *head, char* code, int index)
 {
+    //  Max string length
+    int maxLength = 11;
     
     //  Method call to allocate token struct node.
-        token *temp = createToken(head);
+    token *temp = createToken(head);
     
     //  TODO: Switch statement/while loop logic.
     
     int i;
+    
+    //  TODO: Add logic to prevent out-of-bounds error.
+    while ( isalpha(code[++i]) )
+    {
+        if(strlen(temp->tokenStr) >= maxLength)
+        {   
+            maxLength*=2;
+            temp->tokenStr = realloc(temp->tokenStr, maxLength);   
+        }   
+           
+        temp->tokenStr[i] = code[i];
+    }
     
     return index + i;
     
@@ -367,6 +388,10 @@ int wasSymbol(token *head, char* code, int index)
     token *temp = createToken(head);
     
     //  TODO: Switch statement/while loop logic.
+    while ( ispunct(code[++i]) )
+    {
+        temp->tokenStr[i] = code[i];
+    }
     
     int i;
     
