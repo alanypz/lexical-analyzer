@@ -84,7 +84,7 @@ void analyzer(char codeNoComments[]);
 int wasDigit(token *head, char *code, int index);
 int wasAlpha(token *head, char *code, int index);
 int wasSymbol(token *head, char *code, int index);
-token* createToken(token *head);
+token* createToken(token *head, int length);
 
 int main(int argc, const char * argv[]) {
     
@@ -279,53 +279,31 @@ void analyzer(char *code)
 //
 int wasDigit(token *head, char* code, int index)
 {
+    
     //  Max length of digit
-    maxDigit = 5;
+    int maxLength = 5;
     
     //  Method call to allocate token struct node.
-    token *temp = createToken(head);
+    token *temp = createToken(head, maxLength);
     
     int i = 0;
     
-    //  TODO: Add logic to prevent out-of-bounds error.
     while ( isdigit(code[++i]) )
     {
-        if(strlen(temp->tokenStr) >= maxDigit)
-        {   
-            maxDigit*=2;
-            temp->tokenStr = realloc(temp->tokenStr, maxDigit);   
-        }   
+        
+        if ( strlen(temp->tokenStr) >= maxLength )
+        {
+            
+            maxLength *= 2;
+            temp->tokenStr = realloc( temp->tokenStr, maxLength );
+            
+        }
+        
         temp->tokenStr[i] = code[i];
         
     }
     
     return index + i;
-    
-}
-
-//
-//  Allocates memory for a new token struct node.
-//
-//  @param *head
-//      token, pointer to token structure.
-//  @return
-//      token*, pointer to the newly created struct node.
-//
-token* createToken(token *head)
-{
-    
-    token *last = head;
-    
-    //  Iterate to what is pointed to by last node.
-    while (last != NULL)
-        
-        last = last->next;
-    
-    last = (token*)malloc(sizeof(token));
-    last->next = NULL;
-    last->tokenStr[0];
-    
-    return last;
     
 }
 
@@ -343,26 +321,29 @@ token* createToken(token *head)
 //
 int wasAlpha(token *head, char* code, int index)
 {
+    
     //  Max string length
     int maxLength = 11;
     
     //  Method call to allocate token struct node.
-    token *temp = createToken(head);
-    
-    //  TODO: Switch statement/while loop logic.
+    token *temp = createToken(head, maxLength);
     
     int i;
     
     //  TODO: Add logic to prevent out-of-bounds error.
     while ( isalpha(code[++i]) )
     {
-        if(strlen(temp->tokenStr) >= maxLength)
-        {   
-            maxLength*=2;
-            temp->tokenStr = realloc(temp->tokenStr, maxLength);   
-        }   
-           
+        
+        if( strlen(temp->tokenStr) >= maxLength )
+        {
+            
+            maxLength *= 2;
+            temp->tokenStr = realloc(temp->tokenStr, maxLength);
+            
+        }
+        
         temp->tokenStr[i] = code[i];
+        
     }
     
     return index + i;
@@ -384,18 +365,51 @@ int wasAlpha(token *head, char* code, int index)
 int wasSymbol(token *head, char* code, int index)
 {
     
+    int maxLength = 2;
+    
     //  Method call to allocate token struct node.
-    token *temp = createToken(head);
+    token *temp = createToken(head, maxLength);
+    
+    int i = 0;
     
     //  TODO: Switch statement/while loop logic.
     while ( ispunct(code[++i]) )
     {
+        
         temp->tokenStr[i] = code[i];
+        
     }
     
-    int i;
-    
     return index + i;
+    
+}
+
+//
+//  Allocates memory for a new token struct node.
+//
+//  @param *head
+//      token, pointer to token structure.
+//  @param len
+//      int, starting size of the String.
+//  @return
+//      token*, pointer to the newly created struct node.
+//
+token* createToken(token *head, int len)
+{
+    
+    token *last = head;
+    
+    //  Iterate to what is pointed to by last node.
+    while (last != NULL)
+        
+        last = last->next;
+    
+    last = (token*)malloc(sizeof(token));
+    last->next = NULL;
+    last->tokenStr = (char*)calloc(len, sizeof(char));
+    last->tokenStr[0];
+    
+    return last;
     
 }
 
