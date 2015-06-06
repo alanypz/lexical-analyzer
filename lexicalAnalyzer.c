@@ -54,6 +54,13 @@ typedef struct symbolTable{
     
 }symTable;
 
+//  Token-Struct definition
+typedef struct tokenStruct{
+    
+    char tokenStr[];
+    struct tokenStruct* next;
+}token;
+
 //  List of reserved word names.
 
 char *word[]={
