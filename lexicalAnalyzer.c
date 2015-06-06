@@ -8,13 +8,13 @@
 //  Team Members:
 //  Justin Mackenzie
 //  Alan Yepez
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
 //  Constant declarations.
-
 #define norw    15
 #define imax    32767
 #define cmax    11
@@ -22,14 +22,12 @@
 #define strmax  256
 
 //  I/O file names.
-
 #define INPUT_FILE "input.txt"
 #define CLEAN_OUTPUT_FILE "cleaninput.txt"
 #define TABLE_OUTPUT_FILE "lexemetable.txt"
 #define LIST_OUTPUT_FILE "lexemelist.txt"
 
 //  Internal representation of PL\0 Tokens
-
 typedef enum Tokens{
     nulsym = 1, identsym = 2, numbersym = 3, plussym = 4,
     minussym = 5, multsym = 6,  slashsym = 7, oddsym = 8,
@@ -43,7 +41,6 @@ typedef enum Tokens{
 }token_type;
 
 //  Symbol table structure declaration.
-
 typedef struct symbolTable{
     
     int kind;  //Integer val of Token
@@ -59,79 +56,50 @@ typedef struct tokenStruct{
     
     char tokenStr[11];
     struct tokenStruct* next;
+    
 }token;
 
 //  List of reserved word names.
-
-char *word[]={
+char *word[] = {
     "null", "begin", "call", "const", "do", "else", "end",
     "if", "odd", "procedure","read", "then", "var", "while", "write"
 };
 
 //  Internal representation of reserved words.
-
 int wsym[]={
     nulsym, beginsym, callsym, constsym, dosym, elsesym, endsym, ifsym,
-    oddsym, procsym, readsym, thensym, varsym, whilesym, writesym};
+    oddsym, procsym, readsym, thensym, varsym, whilesym, writesym
+};
 
 //  Special symbol array.
-
 int ssym[256];
 
 //  Global pointer to output file.
-FILE* cleanOutput = NULL;
-
-//static FILE *ofp = NULL;
+FILE *ofp = NULL;
 
 //  Function declaration.
-
 char* initialize();
-void lexical(char codeNoComments[]);
+char* clean(char *code);
+void analyzer(char codeNoComments[]);
 int wasDigit(token *head, char *code, int index);
 int wasAlpha(token *head, char *code, int index);
 int wasSymbol(token *head, char *code, int index);
+token* createToken(token *head);
 
 int main(int argc, const char * argv[]) {
     
-    //Declare and initialize variables
-    cleanOutput = fopen(CLEAN_OUTPUT_FILE, "w");
-    int i,j;
     //  Method call to read input.
-    
     char *code = initialize();
-    char codeNoComments[strlen(code)];
-    memset(codeNoComments,'\0',strlen(code));
     
-    printf("%s\n", code);
+    //  Method to remove comments.
+    char *cleaned = clean(code);
     
-    
-    for(i=0,j=0;i<strlen(code);i++)
-    {
-        if(code[i] == '/' && code[i+1] == '*')
-        {
-            i+=2;
-            while(code[i] != '*' || code[i+1] != '/')
-            {
-                i++;  
-            }
-            i+=2;
-        }
-        
-        codeNoComments[j++] = code[i];
-    }
-    
-    
-    lexical(codeNoComments);
-    
-    fprintf(cleanOutput,"%s\n",codeNoComments);
+    //  Method call to parse tokens.
+    analyzer(cleaned);
     
     //  Free allocated memory.
-    free(code);
+    free(cleaned);
     
-    //  Close file for writing
-    fclose(cleanOutput);
-    
-    system("pause");
     return 0;
     
 }
@@ -148,11 +116,9 @@ char* initialize( )
     char *head = NULL;
     
     //  Create pointer to input file.
-    
     FILE* ifp = fopen(INPUT_FILE, "r");
     
     //  Return null if file could not be read.
-    
     if (!ifp)
     {
         
@@ -163,43 +129,106 @@ char* initialize( )
     }
     
     //  Determine the length of the input file.
-    
     fseek(ifp, 0, SEEK_END);
     int len = (int)ftell(ifp);
     fseek(ifp, 0, SEEK_SET);
     
     //  Dynamically size string.
-    
     head = (char*)calloc(len + 1, sizeof(char));
     char *index = head;
     char c;
     
+    //  Continue appending to String until end of character is reached.
     if ( head )
     {
         while ( (c = getc(ifp)) != EOF )
             
             *index++ = c;
-    
+        
         *index = '\0';
         
     }
     else
         
         printf("Error: Memory allocation failed.\n");
-        
+    
+    printf("%s\n\n",head);  //  bug printing
+    
     return head;
     
 }
 
-void lexical(char *code)
+//
+//  Removes comments in code from input file.
+//
+//  @param *code
+//      char, pointer to character array.
+//  @return
+//      char, pointer to the revised character array.
+//
+char* clean(char *code)
 {
     
+    //  Create and initalize temp char array.
+    char *codeNoComments = (char*)calloc(strlen(code) + 1, sizeof(char));
+    
+    int i, j;
+    
+    //  Iterate through input string and only append content not in comments.
+    for( i = 0, j = 0; i < strlen(code); i++ )
+    {
+        
+        if( code[i] == '/' && code[i+1] == '*' )
+        {
+            
+            i += 2;
+            
+            while( code[i] != '*' || code[i+1] != '/' )
+            {
+                
+                i++;
+                
+            }
+            
+            i += 2;
+            
+        }
+        
+        codeNoComments[j++] = code[i];
+        
+    }
+    
+    //  Free original input array.
+    free(code);
+    
+    //  Print to output file.
+    
+    FILE * ofp = fopen(CLEAN_OUTPUT_FILE, "w");
+    printf("%s\n",codeNoComments);  //  bug printing
+    fprintf(ofp,"%s\n",codeNoComments);
+    fclose(ofp);
+    
+    return codeNoComments;
+    
+}
+
+//
+//  Takes in string and parses tokens.
+//
+//  @param *code
+//      char, pointer to the char array.
+//
+void analyzer(char *code)
+{
+    
+    //  Initialize head pointer of token struct linked list.
     token *head = (token*)malloc(sizeof(token));
     head->next = NULL;
     
     int index = 0;
     char sym = '\0';
     
+    //  Iterate until index surpases input string.
     while ( index < strlen(code) )
     {
         
@@ -226,29 +255,37 @@ void lexical(char *code)
         else
         {
             
+            //  TODO: Add logic for invalid chars.
             
         }
+        
+        index++;    //  added to prevent infinite loops while bug testing
         
     }
     
 }
 
-
-int wasDigit(token *head, char code[], int index)
+//
+//  Creates token when symbol detected as digit.
+//
+//  @param *head
+//      token, pointer to token structure.
+//  @param *code
+//      char, pointer to character array.
+//  @param index
+//      int, the starting index.
+//  @return
+//      int, the updated index.
+//
+int wasDigit(token *head, char* code, int index)
 {
- 
+    
+    //  Method call to allocate token struct node.
+    token *temp = createToken(head);
+    
     int i = 0;
     
-    token *temp = head;
-    
-    while (temp != NULL)
-        
-        temp = temp->next;
-        
-    temp = (token*)malloc(sizeof(token));
-    temp->next = NULL;
-    temp->tokenStr[i];
-    
+    //  TODO: Add logic to prevent out-of-bounds error.
     while ( isdigit(code[++i]) )
     {
         temp->tokenStr[i] = code[i];
@@ -259,18 +296,78 @@ int wasDigit(token *head, char code[], int index)
     
 }
 
+//
+//  Allocates memory for a new token struct node.
+//
+//  @param *head
+//      token, pointer to token structure.
+//  @return
+//      token*, pointer to the newly created struct node.
+//
+token* createToken(token *head)
+{
+    
+    token *last = head;
+    
+    //  Iterate to what is pointed to by last node.
+    while (last != NULL)
+        
+        last = last->next;
+    
+    last = (token*)malloc(sizeof(token));
+    last->next = NULL;
+    last->tokenStr[0];
+    
+    return last;
+    
+}
+
+//
+//  Creates token when symbol detected as alpha character.
+//
+//  @param *head
+//      token, pointer to token structure.
+//  @param *code
+//      char, pointer to character array.
+//  @param index
+//      int, the starting index.
+//  @return
+//      int, the updated index.
+//
 int wasAlpha(token *head, char* code, int index)
 {
+    
+    //  Method call to allocate token struct node.
+        token *temp = createToken(head);
+    
+    //  TODO: Switch statement/while loop logic.
+    
     int i;
-    
-    
     
     return index + i;
     
 }
 
+//
+//  Creates token when symbol detected.
+//
+//  @param *head
+//      token, pointer to token structure.
+//  @param *code
+//      char, pointer to character array.
+//  @param index
+//      int, the starting index.
+//  @return
+//      int, the updated index.
+//
 int wasSymbol(token *head, char* code, int index)
 {
+    
+    //  Method call to allocate token struct node.
+    token *temp = createToken(head);
+    
+    //  TODO: Switch statement/while loop logic.
+    
     int i;
     
     return index + i;
