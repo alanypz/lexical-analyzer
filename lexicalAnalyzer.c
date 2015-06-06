@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 //  Constant declarations.
 
@@ -45,11 +46,11 @@ typedef enum Tokens{
 
 typedef struct symbolTable{
     
-    int kind;
-    char name[10];
+    int kind;  //Integer val of Token
+    char name[12];
     int val;
-    int level;
-    int adr;
+    int level; //L
+    int adr;   //M
     
 }symTable;
 
@@ -83,41 +84,42 @@ int main(int argc, const char * argv[]) {
     
     //Declare and initialize variables
     cleanOutput = fopen(CLEAN_OUTPUT_FILE, "w");
-    char* codeNoComments;
-    
+    char* temp;
+    int i,j;
     //  Method call to read input.
     
     char *code = initialize();
-    codeNoComments = code;
+    char codeNoComments[strlen(code)];
+    memset(codeNoComments,'\0',strlen(code));
     
     printf("%s\n", code);
     
-    //Clean-input
-    while(*code != '\0')
+    
+    for(i=0,j=0;i<strlen(code);i++)
     {
-        if(*code == '/' && *(code + 1) == '*')
+        if(code[i] == '/' && code[i+1] == '*')
         {
-            while(*code != '*' || *(code + 1) != '/')
+            i+=2;
+            while(code[i] != '*' || code[i+1] != '/')
             {
-                *code = ' ';
-                ++code;
+                i++;  
             }
-            *code = ' ';
-            *(code+1) = ' ';
-            code+=2;
+            i+=2;
         }
         
-        ++code;
+        codeNoComments[j++] = code[i];
     }
+    
     
     fprintf(cleanOutput,"%s\n",codeNoComments);
     
     //  Free allocated memory.
-    free(codeNoComments);
+    free(code);
     
     //  Close file for writing
     fclose(cleanOutput);
     
+    system("pause");
     return 0;
     
 }
@@ -176,3 +178,5 @@ char* initialize( )
     return head;
     
 }
+
+
