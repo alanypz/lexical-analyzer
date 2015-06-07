@@ -20,7 +20,7 @@
 #define MAX_NUMS 5
 
 //  I/O file names.
-#define INPUT_FILE "input.txt"    //  filename change for testing
+#define INPUT_FILE "testing.txt"    //  filename change for testing
 #define CLEAN_OUTPUT_FILE "cleaninput.txt"
 #define TABLE_OUTPUT_FILE "lexemetable.txt"
 #define LIST_OUTPUT_FILE "lexemelist.txt"
