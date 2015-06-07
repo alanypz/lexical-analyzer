@@ -8,6 +8,7 @@
 //  Team Members:
 //  Justin Mackenzie
 //  Alan Yepez
+//
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,13 +20,13 @@
 #define MAX_NUMS 5
 
 //  I/O file names.
-#define INPUT_FILE "input.txt"
+#define INPUT_FILE "input.txt"    //  filename change for testing
 #define CLEAN_OUTPUT_FILE "cleaninput.txt"
 #define TABLE_OUTPUT_FILE "lexemetable.txt"
 #define LIST_OUTPUT_FILE "lexemelist.txt"
 
 //  Internal representation of PL\0 Tokens
-typedef enum Tokens{
+typedef enum Tokens{    //  remove value assignments?
     nulsym = 1, identsym = 2, numbersym = 3, plussym = 4,
     minussym = 5, multsym = 6,  slashsym = 7, oddsym = 8,
     eqlsym = 9, neqsym = 10, lessym = 11, leqsym = 12,
@@ -38,20 +39,21 @@ typedef enum Tokens{
 }token_type;
 
 typedef enum StateLabels{
-    init, firstState, stringState, numberState, symbolState, beginState, cState, callState, constState,
-    ifState, procedureState, readState, whileState, writeState
+    init, firstState, stringState, numberState, symbolState, beginState,
+    cState, callState, constState, doState, eState, elseState, endState,
+    ifState, oddState, procedureState, readState, thenState, wState,
+    whileState, writeState, varState
     
 }state;
 
-
 //  Symbol table structure declaration.
-typedef struct symbolTable{
+typedef struct symbolTable{ //  required?
     
-    int kind;  //Integer val of Token
-    char name[12];
+    int kind;
+    char name[MAX_SIZE];
     int val;
-    int level; //L
-    int adr;   //M
+    int level;
+    int adr;
     
 }symTable;
 
@@ -59,8 +61,7 @@ typedef struct symbolTable{
 typedef struct tokenStruct{
     
     int class;
-    char* lexeme;
-    char* tokenStr;
+    char lexeme[MAX_SIZE];
     struct tokenStruct* next;
     
 }token;
@@ -78,28 +79,21 @@ int wsym[]={
 };
 
 //  Special symbol array.
-int ssym[256];
+int ssym[256];  //  required?
 
-//  Global pointer to output file.
-FILE *ofp = NULL;
-
-//  Function declaration.
+//  Function declarations.
 char* initialize();
 char* clean(char *code);
-void analyzer(char codeNoComments[]);
-int wasDigit(token *head, char *code, int index);
-int wasAlpha(token *head, char *code, int index);
-int wasSymbol(token *head, char *code, int index);
 token* createToken(token *head);
-void tokenize(char * code);
+token* tokenize(char * code);
 int isLetter(char ch);
 int isNumber(char ch);
 int isSymbol(char ch);
 int isValid(char ch);
+int setSymbolClass(char ch);
+void print(token* lexemes);
 
 int main(int argc, const char * argv[]) {
-    
-//    printf("Val of char is %d.\n\n", (int)strlen(""));  //  bug testing
     
     //  Method call to read input.
     char *code = initialize();
@@ -108,10 +102,14 @@ int main(int argc, const char * argv[]) {
     char *cleaned = clean(code);
     
     //  Method call to parse tokens.
-    analyzer(cleaned);
+    token *lexemes = tokenize(cleaned);
+    
+    //  Print to output files.
+    print(lexemes);
     
     //  Free allocated memory.
     free(cleaned);
+    free(lexemes);
     
     return 0;
     
@@ -165,7 +163,7 @@ char* initialize( )
         
         printf("Error: Memory allocation failed.\n");
     
-    printf("%s\n\n",head);  //  bug printing
+    printf("Input Code:\n%s\n\n",head);  //  bug printing
     
     return head;
     
@@ -217,7 +215,7 @@ char* clean(char *code)
     //  Print to output file.
     
     FILE * ofp = fopen(CLEAN_OUTPUT_FILE, "w");
-    printf("%s\n",codeNoComments);  //  bug printing
+    printf("Cleaned Code:\n%s\n",codeNoComments);  //  bug printing
     fprintf(ofp,"%s\n",codeNoComments);
     fclose(ofp);
     
@@ -225,100 +223,167 @@ char* clean(char *code)
     
 }
 
-void tokenize(char * code)
+//
+//  Main logic function. Identifies tokens using states.
+//
+//  @param *code
+//      char, pointer to character array.
+//  @return token*
+//      pointer to the head of the token datastructure.
+//
+token* tokenize(char * code)
 {
 
-    int i = 0, j = 1;
+    int i = 0, j = 0;
     char ch;
     int state = init;
     
-    token *head = NULL;
-    token *this = NULL;
+    token *head = (token*)malloc(sizeof(token));
+    head->next = NULL;
+    head->class = -1;
     
-    this = createToken(head);
+    token *this = createToken(head);
     state = firstState;
+    
+    //  TODO: Check on whether *this is making the correct connection between nodes.
     
     while ( i < strlen(code) )
     {
         
-        ch = code[i++];
+        ch = code[i];
+        
+        if ( !isValid(ch) || ch == ' ' )
+        {
+            
+            if ( j != 0 )
+            {
+                
+                this = createToken(head);
+                state = firstState;
+                j = 0;
+                
+            }
+            
+            else
+            {
+                
+                i++;
+                
+                continue;
+                
+            }
+            
+        }
         
         //  TODO: Insert classes into switches.
-    
         switch ( state ) {
                 
             case firstState:    //  First state for new lexeme.
             {
                 
-                if ( !isValid(ch) )
+                if ( ch == 'b' )
                 {
-                    
-                    break;
-                    
-                }
-                else if ( ch == 'b' )
-                {
-                    
+                    this->class = identsym;
                     state = beginState;
                     
                 }
                 else if ( ch == 'c' )
                 {
-                    
+                    this->class = identsym;
                     state = cState;
+                    
+                }
+                else if ( ch == 'd' )
+                {
+                    this->class = identsym;
+                    state = doState;
+                    
+                }
+                else if ( ch == 'e' )
+                {
+                    this->class = identsym;
+                    state = eState;
                     
                 }
                 else if ( ch == 'i' )
                 {
                     
+                    this->class = identsym;
                     state = ifState;
+                    
+                }
+                else if ( ch == 'o' )
+                {
+                    
+                    this->class = identsym;
+                    state = oddState;
                     
                 }
                 else if ( ch == 'p' )
                 {
                     
+                    this->class = identsym;
                     state = procedureState;
                     
                 }
                 else if ( ch == 'r' )
                 {
                     
+                    this->class = identsym;
                     state = readState;
+                    
+                }
+                else if ( ch == 't' )
+                {
+                    
+                    this->class = identsym;
+                    state = thenState;
                     
                 }
                 else if ( ch == 'w' )
                 {
                     
+                    this->class = identsym;
                     state = writeState;
+                    
+                }
+                else if ( ch == 'v' )
+                {
+                    
+                    this->class = identsym;
+                    state = varState;
                     
                 }
                 else if ( isLetter(ch) )
                 {
                     
+                    this->class = identsym;
                     state = stringState;
                     
                 }
                 else if ( isNumber(ch) )
                 {
                     
+                    this->class = numbersym;
                     state = numberState;
                     
                 }
                 else if ( isSymbol(ch) )
                 {
-                        
+                    
+                    this->class = setSymbolClass(ch);
                     state = symbolState;
                         
                 }
                 else
                 {
                     
-                    continue;
+                    printf("Error: This shouldn't happen...\n");
+                    break;
                     
                 }
                 
-                this->lexeme[strlen(this->lexeme)] = ch;
-                j++;
+                this->lexeme[j++] = ch;
                 
                 break;
                 
@@ -326,34 +391,24 @@ void tokenize(char * code)
             case stringState:
             {
                 
-                if ( !isValid(ch) )
+                if ( !isLetter(ch) || !isNumber(ch) )
                 {
                     
                     this = createToken(head);
                     state = firstState;
                     j = 0;
                     
-                    break;
-                    
-                }
-                else if ( isSymbol(ch) )
-                {
-                    
-                    this = createToken(head);
-                    state = symbolState;
-                    j = 1;
-                    
-                    break;
+                    continue;
                     
                 }
                 
-                this->lexeme[strlen(this->lexeme)] = ch;
-                j++;
+                if ( j < MAX_SIZE )
                 
-                if ( strlen(this->lexeme) > MAX_SIZE )
+                    this->lexeme[j++] = ch;
+                
+                else
                     
-                    //  TODO: Figure out how to handle this error.
-                    printf("Error: Exceeded maximum identifier size.");
+                    printf("Error: Exceeded maximum identifier size.\n");
                 
                 break;
                 
@@ -361,34 +416,26 @@ void tokenize(char * code)
             case numberState:
             {
                 
-                if ( !isValid(ch) )
+                if ( !isNumber(ch) )
                 {
+                    
+                    printf("Error: Variable does not start with letter.\n");
                     
                     this = createToken(head);
                     state = firstState;
                     j = 0;
                     
-                    break;
-                    
-                }
-                else if ( !isNumber(ch) )
-                {
-                    //  TODO: Display some kind of error, per the rubric.
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
-                    i--;
-                    
-                    break;
-                    
+                    continue;
+                
                 }
                 
-                this->lexeme[strlen(this->lexeme)] = ch;
-                j++;
-                
-                if ( strlen(this->lexeme) > MAX_NUMS )
+                if ( j < MAX_NUMS )
                     
-                    //  TODO: Figure out how to handle this error.
+                    this->lexeme[j++] = ch;
+                
+
+                else
+
                     printf("Error: Exceeded maximum number size.");
                 
                 break;
@@ -397,35 +444,29 @@ void tokenize(char * code)
             case symbolState:
             {
                 
-                if ( !isValid(ch) )
-                {
-                
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
-                    
-                    break;
-                    
-                }
-                else if ( !isSymbol(ch) )
+                if ( !isSymbol(ch) )
                 {
                     
                     this = createToken(head);
                     state = firstState;
                     j = 0;
-                    i--;
+                    
+                    continue;
                     
                 }
-                else if ( ch != '>' || ch != '=' )
+                else
                 {
                     
-                    //  TODO:   Figure out to handle this error.
+                    //  TODO:   Identify two char symbols. Probably using helper function.
                     
-                    
+                    /*
+                     TODO:
+                     neqsym = 10, leqsym = 12, geqsym = 14, becomessym = 20
+                     */
+
                 }
-                
-                this->lexeme[strlen(this->lexeme)] = ch;
-                j++;
+
+                this->lexeme[j++] = ch;
                 
                 break;
                 
@@ -433,38 +474,29 @@ void tokenize(char * code)
             case beginState:
             {
                 
-                if ( !isValid(ch) )
+                if ( isSymbol(ch) )
                 {
-                    //  TODO: Signify that class is "begin." Check next char too.
+                    
+                    this->class = identsym;
                     this = createToken(head);
                     state = firstState;
                     j = 0;
                     
-                    break;
+                    continue;
                     
                 }
-                else if ( isSymbol(ch) )
-                {
-                    
-                    this = createToken(head);
-                    state = firstState;
-                    i--;
-                    j = 0;
-                    
-                    break;
-                    
-                }
-                
-                this->lexeme[strlen(this->lexeme)] = ch;
                 
                 char* str = "begin";
                 
-                if ( ch == str[j++] )
+                this->lexeme[j] = ch;
+                
+                if ( ch == str[j] )
                 {
                     
-                    if ( j == 4 && ch == 'n' )
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
                     {
-                        
+                        this->class = beginsym;
                         this = createToken(head);
                         state = firstState;
                         j = 0;
@@ -472,15 +504,11 @@ void tokenize(char * code)
                         break;
                         
                     }
-
                     
                 }
-                else if ( isLetter(ch) || isNumber(ch) )
-                {
+                else
                     
                     state = stringState;
-                    
-                }
                 
                 j++;
                 
@@ -490,32 +518,21 @@ void tokenize(char * code)
             case cState:
             {
                 
-                if ( !isValid(ch) )
+                if ( isSymbol(ch) )
                 {
                     
                     this = createToken(head);
                     state = firstState;
                     j = 0;
                     
-                    break;
-                    
-                }
-                else if ( isSymbol(ch) )
-                {
-                    
-                    this = createToken(head);
-                    state = firstState;
-                    i--;
-                    j = 0;
-                    
-                    break;
+                    continue;
                     
                 }
                 
                 char* str1 = "call";
                 char* str2 = "const";
                 
-                this->lexeme[strlen(this->lexeme)] = ch;
+                this->lexeme[j] = ch;
                 
                 if ( ch == str1[j] )
                 {
@@ -529,12 +546,10 @@ void tokenize(char * code)
                     state = constState;
                 
                 }
-                else if ( isLetter(ch) || isNumber(ch) )
-                {
+                else
                     
                     state = stringState;
                     
-                }
                 
                 j++;
 
@@ -544,73 +559,261 @@ void tokenize(char * code)
             case callState:
             {
                 
-                if ( !isValid(ch) )
+                if ( isSymbol(ch) )
                 {
                     
                     this = createToken(head);
                     state = firstState;
                     j = 0;
                     
-                    break;
+                    continue;
                     
                 }
                 
                 char* str = "call";
                 
-                this->lexeme[strlen(this->lexeme)] = ch;
+                this->lexeme[j] = ch;
                 
-                if ( ch == str[j++] )
+                if ( ch == str[j] )
                 {
                     
-                    if ( j == 4 && ch == 'l' )
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
                     {
-                        //  TODO: Signify that class is "call." Check next char too.
+                        
+                        this->class = callsym;
                         this = createToken(head);
-                        state = callState;
+                        state = firstState;
                         j = 0;
+                        
+                        break;
                         
                     }
                     
                 }
+                else
+                    
+                    state = stringState;
+                
+                j++;
                 
                 break;
                 
             }
             case constState:
             {
-                
-                if ( !isValid(ch) )
+
+                if ( isSymbol(ch) )
                 {
                     
                     this = createToken(head);
                     state = firstState;
                     j = 0;
                     
-                    break;
+                    continue;
                     
                 }
-                
+            
                 char* str = "const";
                 
-                this->lexeme[strlen(this->lexeme)] = ch;
+                this->lexeme[j] = ch;
                 
-                if ( ch == str[j++] )
+                if ( ch == str[j] )
                 {
                     
-                    if ( j == 5 && ch == 't' )
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
                     {
-                        //  TODO: Signify that class is "const." Check next char too.
+                        
+                        this->class = constsym;
                         this = createToken(head);
-                        state = constState;
+                        state = firstState;
                         j = 0;
+                        
+                        break;
                         
                     }
                     
-                    else
-                        
-                        j++;
+                }
+                else
+                    
+                    state = stringState;
+                
+                j++;
+                
+                break;
+                
+            }
+            case doState:
+            {
+                
+                if ( isSymbol(ch) )
+                {
+                    
+                    this->class = identsym;
+                    this = createToken(head);
+                    state = firstState;
+                    j = 0;
+                    
+                    continue;
                     
                 }
+                
+                char* str = "do";
+                
+                this->lexeme[j] = ch;
+                
+                if ( ch == str[j] )
+                {
+                    
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
+                    {
+                        this->class = dosym;
+                        this = createToken(head);
+                        state = firstState;
+                        j = 0;
+                        
+                        break;
+                        
+                    }
+                    
+                    
+                }
+                else
+                    
+                    state = stringState;
+                
+                j++;
+                
+                break;
+                
+            }
+            case eState:
+            {
+                
+                if ( isSymbol(ch) )
+                {
+                    
+                    this = createToken(head);
+                    state = firstState;
+                    j = 0;
+                    
+                    continue;
+                    
+                }
+                
+                char* str1 = "end";
+                char* str2 = "else";
+                
+                this->lexeme[j] = ch;
+                
+                if ( ch == str1[j] )
+                {
+                    
+                    state = endState;
+                    
+                }
+                else if ( ch == str2[j] )
+                {
+                    
+                    state = elseState;
+                    
+                }
+                else
+                    
+                    state = stringState;
+                
+                
+                j++;
+                
+                break;
+                
+            }
+            case endState:
+            {
+             
+                if ( isSymbol(ch) )
+                {
+                    
+                    this = createToken(head);
+                    state = firstState;
+                    j = 0;
+                    
+                    continue;
+                    
+                }
+                
+                char* str = "end";
+                
+                this->lexeme[j] = ch;
+                
+                if ( ch == str[j] )
+                {
+                    
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
+                    {
+                        
+                        this->class = endsym;
+                        this = createToken(head);
+                        state = firstState;
+                        j = 0;
+                        
+                        break;
+                        
+                    }
+                    
+                }
+                else
+                    
+                    state = stringState;
+                
+                j++;
+                
+                break;
+                
+            }
+            case elseState:
+            {
+                
+                if ( isSymbol(ch) )
+                {
+                    
+                    this = createToken(head);
+                    state = firstState;
+                    j = 0;
+                    
+                    continue;
+                    
+                }
+                
+                char* str = "else";
+                
+                this->lexeme[j] = ch;
+                
+                if ( ch == str[j] )
+                {
+                    
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
+                    {
+                        
+                        this->class = elsesym;
+                        this = createToken(head);
+                        state = firstState;
+                        j = 0;
+                        
+                        break;
+                        
+                    }
+                    
+                }
+                else
+                    
+                    state = stringState;
+                
+                j++;
                 
                 break;
                 
@@ -618,6 +821,87 @@ void tokenize(char * code)
             case ifState:
             {
                 
+                if ( isSymbol(ch) )
+                {
+                    
+                    this = createToken(head);
+                    state = firstState;
+                    j = 0;
+                    
+                    continue;
+                    
+                }
+                
+                char* str = "if";
+                
+                this->lexeme[j] = ch;
+                
+                if ( ch == str[j] )
+                {
+                    
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
+                    {
+                        
+                        this->class = ifsym;
+                        this = createToken(head);
+                        state = firstState;
+                        j = 0;
+                        
+                        break;
+                        
+                    }
+                    
+                }
+                else
+                    
+                    state = stringState;
+                
+                j++;
+                
+                break;
+                
+            }
+            case oddState:
+            {
+                
+                if ( isSymbol(ch) )
+                {
+                    
+                    this = createToken(head);
+                    state = firstState;
+                    j = 0;
+                    
+                    continue;
+                    
+                }
+                
+                char* str = "odd";
+                
+                this->lexeme[j] = ch;
+                
+                if ( ch == str[j] )
+                {
+                    
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
+                    {
+                        
+                        this->class = oddsym;
+                        this = createToken(head);
+                        state = firstState;
+                        j = 0;
+                        
+                        break;
+                        
+                    }
+                    
+                }
+                else
+                    
+                    state = stringState;
+                
+                j++;
                 
                 break;
                 
@@ -625,6 +909,43 @@ void tokenize(char * code)
             case procedureState:
             {
                 
+                if ( isSymbol(ch) )
+                {
+                    
+                    this = createToken(head);
+                    state = firstState;
+                    j = 0;
+                    
+                    continue;
+                    
+                }
+                
+                char* str = "procedure";
+                
+                this->lexeme[j] = ch;
+                
+                if ( ch == str[j] )
+                {
+                    
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
+                    {
+                        
+                        this->class = procsym;
+                        this = createToken(head);
+                        state = firstState;
+                        j = 0;
+                        
+                        break;
+                        
+                    }
+                    
+                }
+                else
+                    
+                    state = stringState;
+                
+                j++;
                 
                 break;
                 
@@ -632,13 +953,173 @@ void tokenize(char * code)
             case readState:
             {
                 
+                if ( isSymbol(ch) )
+                {
+                    
+                    this = createToken(head);
+                    state = firstState;
+                    j = 0;
+                    
+                    continue;
+                    
+                }
+                
+                char* str = "read";
+                
+                this->lexeme[j] = ch;
+                
+                if ( ch == str[j] )
+                {
+                    
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
+                    {
+                        
+                        this->class = readsym;
+                        this = createToken(head);
+                        state = firstState;
+                        j = 0;
+                        
+                        break;
+                        
+                    }
+                    
+                }
+                else
+                    
+                    state = stringState;
+                
+                j++;
                 
                 break;
                 
             }
+            case thenState:
+            {
+                
+                if ( isSymbol(ch) )
+                {
+                    
+                    this = createToken(head);
+                    state = firstState;
+                    j = 0;
+                    
+                    continue;
+                    
+                }
+                
+                char* str = "then";
+                
+                this->lexeme[j] = ch;
+                
+                if ( ch == str[j] )
+                {
+                    
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
+                    {
+                        
+                        this->class = thensym;
+                        this = createToken(head);
+                        state = firstState;
+                        j = 0;
+                        
+                        break;
+                        
+                    }
+                    
+                }
+                else
+                    
+                    state = stringState;
+                
+                j++;
+                
+                break;
+                
+            }
+            case wState:
+            {
+                
+                if ( isSymbol(ch) )
+                {
+                    
+                    this = createToken(head);
+                    state = firstState;
+                    j = 0;
+                    
+                    continue;
+                    
+                }
+                
+                char* str1 = "call";
+                char* str2 = "const";
+                
+                this->lexeme[j] = ch;
+                
+                if ( ch == str1[j] )
+                {
+                    
+                    state = callState;
+                    
+                }
+                else if ( ch == str2[j] )
+                {
+                    
+                    state = constState;
+                    
+                }
+                else
+                    
+                    state = stringState;
+                
+                
+                j++;
+                
+                break;
+                
+            }
+                
             case whileState:
             {
                 
+                if ( isSymbol(ch) )
+                {
+                    
+                    this = createToken(head);
+                    state = firstState;
+                    j = 0;
+                    
+                    continue;
+                    
+                }
+                
+                char* str = "while";
+                
+                this->lexeme[j] = ch;
+                
+                if ( ch == str[j] )
+                {
+                    
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
+                    {
+                        
+                        this->class = readsym;
+                        this = createToken(head);
+                        state = firstState;
+                        j = 0;
+                        
+                        break;
+                        
+                    }
+                    
+                }
+                else
+                    
+                    state = stringState;
+                
+                j++;
                 
                 break;
                 
@@ -646,37 +1127,112 @@ void tokenize(char * code)
             case writeState:
             {
                 
+                if ( isSymbol(ch) )
+                {
+                    
+                    this = createToken(head);
+                    state = firstState;
+                    j = 0;
+                    
+                    continue;
+                    
+                }
+                
+                char* str = "while";
+                
+                this->lexeme[j] = ch;
+                
+                if ( ch == str[j] )
+                {
+                    
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
+                    {
+                        
+                        this->class = readsym;
+                        this = createToken(head);
+                        state = firstState;
+                        j = 0;
+                        
+                        break;
+                        
+                    }
+                    
+                }
+                else
+                    
+                    state = stringState;
+                
+                j++;
                 
                 break;
                 
             }
-   
-            default:
+            case varState:
             {
                 
-                printf("Error: Could not find case for character.\n");
+                if ( isSymbol(ch) )
+                {
+                    
+                    this = createToken(head);
+                    state = firstState;
+                    j = 0;
+                    
+                    continue;
+                    
+                }
+                
+                char *str = "var";
+                
+                this->lexeme[j] = ch;
+                
+                if ( ch == str[j] )
+                {
+                    
+                    if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
+                    {
+                        
+                        this->class = varsym;
+                        this = createToken(head);
+                        state = firstState;
+                        j = 0;
+                        
+                        break;
+                        
+                    }
+                    
+                }
+                else
+                    
+                    state = stringState;
+                
+                j++;
                 
                 break;
                 
             }
                 
-                
-                
-        }
+        }   //  switch end
     
+        i++;
+
+    }   //  while end
     
+    //  TODO: Check on proper termination?
     
-    
-    
-    
-    
-    
-    }
-    
-    
+    return head;
     
 }
 
+//
+//  Determines whether char is a valid alpha character.
+//
+//  @param ch
+//      char, character from input array.
+//  @return
+//      int, returns 1 if true, 0 otherwise.
+//
 int isLetter(char ch)
 {
     
@@ -684,6 +1240,14 @@ int isLetter(char ch)
     
 }
 
+//
+//  Determines whether char is a valid numerical character.
+//
+//  @param ch
+//      char, character from input array.
+//  @return
+//      int, returns 1 if true, 0 otherwise.
+//
 int isNumber(char ch)
 {
     
@@ -691,6 +1255,14 @@ int isNumber(char ch)
     
 }
 
+//
+//  Determines whether char is a valid symbol character.
+//
+//  @param ch
+//      char, character from input array.
+//  @return
+//      int, returns 1 if true, 0 otherwise.
+//
 int isSymbol (char ch)
 {
     
@@ -698,186 +1270,18 @@ int isSymbol (char ch)
     
 }
 
+//
+//  Determines whether char is either a alpha, numerical, or symbol character.
+//
+//  @param ch
+//      char, character from input array.
+//  @return
+//      int, returns 1 if true, 0 otherwise.
+//
 int isValid(char ch)
 {
     
     return ( isLetter(ch) || isNumber(ch) || isSymbol(ch) );
-    
-}
-
-
-//
-//  Takes in string and parses tokens.
-//
-//  @param *code
-//      char, pointer to the char array.
-//
-void analyzer(char *code)
-{
-    
-    return; //  bug testing
-    
-    //  Initialize head pointer of token struct linked list.
-    token *head = (token*)malloc(sizeof(token));
-    head->next = NULL;
-    head->class = -1;
-    
-    int index = 0;
-    char sym = '\0';
-    
-    //  Iterate until index surpases input string.
-    while ( index < strlen(code) )
-    {
-        
-        sym = code[index];
-        
-        if ( isdigit(sym) )
-        {
-            
-            index = wasDigit(head, code, index);
-            
-        }
-        else if ( isalpha(sym) )
-        {
-            
-            index = wasAlpha(head, code, index);
-            
-        }
-        else if( ispunct(sym) )
-        {
-            
-            index = wasSymbol(head, code, index);
-            
-        }
-        else
-        {
-            
-            //  TODO: Add logic for invalid chars.
-            
-        }
-        
-        index++;    //  added to prevent infinite loops while bug testing
-        
-    }
-    
-}
-
-//
-//  Creates token when symbol detected as digit.
-//
-//  @param *head
-//      token, pointer to token structure.
-//  @param *code
-//      char, pointer to character array.
-//  @param index
-//      int, the starting index.
-//  @return
-//      int, the updated index.
-//
-int wasDigit(token *head, char* code, int index)
-{
-    
-    //  Max length of digit
-    int maxLength = 5;
-    
-    //  Method call to allocate token struct node.
-    token *temp = createToken(head);
-    
-    int i = 0;
-    
-    while ( isdigit(code[++i]) )
-    {
-        
-        if ( strlen(temp->tokenStr) >= maxLength )
-        {
-            
-            maxLength *= 2;
-            temp->tokenStr = realloc( temp->tokenStr, maxLength );
-            
-        }
-        
-        temp->tokenStr[i] = code[i];
-        
-    }
-    
-    return index + i;
-    
-}
-
-//
-//  Creates token when symbol detected as alpha character.
-//
-//  @param *head
-//      token, pointer to token structure.
-//  @param *code
-//      char, pointer to character array.
-//  @param index
-//      int, the starting index.
-//  @return
-//      int, the updated index.
-//
-int wasAlpha(token *head, char* code, int index)
-{
-    
-    //  Max string length
-    int maxLength = 11;
-    
-    //  Method call to allocate token struct node.
-    token *temp = createToken(head);
-    
-    int i;
-    
-    //  TODO: Add logic to prevent out-of-bounds error.
-    while ( isalpha(code[++i]) )
-    {
-        
-        if( strlen(temp->tokenStr) >= maxLength )
-        {
-            
-            maxLength *= 2;
-            temp->tokenStr = realloc(temp->tokenStr, maxLength);
-            
-        }
-        
-        temp->tokenStr[i] = code[i];
-        
-    }
-    
-    return index + i;
-    
-}
-
-//
-//  Creates token when symbol detected.
-//
-//  @param *head
-//      token, pointer to token structure.
-//  @param *code
-//      char, pointer to character array.
-//  @param index
-//      int, the starting index.
-//  @return
-//      int, the updated index.
-//
-int wasSymbol(token *head, char* code, int index)
-{
-    
-    int maxLength = 2;
-    
-    //  Method call to allocate token struct node.
-    token *temp = createToken(head);
-    
-    int i = 0;
-    
-    //  TODO: Switch statement/while loop logic.
-    while ( ispunct(code[++i]) )
-    {
-        
-        temp->tokenStr[i] = code[i];
-        
-    }
-    
-    return index + i;
     
 }
 
@@ -897,19 +1301,111 @@ token* createToken(token *head)
     token *last = head;
     
     //  Iterate to what is pointed to by last node.
-    while (last != NULL)
+    while (last->next != NULL)
         
         last = last->next;
     
-    last = (token*)malloc(sizeof(token));
+    last->next = (token*)malloc(sizeof(token));
+    last = last->next;
     last->next = NULL;
-    last->lexeme = "";
     last->class = -1;
     
     return last;
     
 }
 
+//
+//  Determines the numerical value representing a token.
+//
+//  @param ch
+//      char, character from input array.
+//  @return
+//      int, numerical value representing a token.
+//
+int setSymbolClass(char ch)
+{
+    
+    switch ( ch ) {
+            
+        case '+':
+            
+            return plussym;
+            
+        case '-':
+            
+            return minussym;
+            
+        case '*':
+            
+            return multsym;
+            
+        case '/':
+            
+            return slashsym;
+            
+        case '=':
+            
+            return eqlsym;
+            
+        case '<':
+            
+            return lessym;
+            
+        case '>':
+            
+            return gtrsym;
+            
+        case '(':
+            
+            return lparentsym;
+            
+        case ')':
+            
+            return rparentsym;
+            
+        case ',':
+            
+            return commasym;
+            
+        case ';':
+            
+            return semicolonsym;
+            
+        case '.':
+            
+            return periodsym;
+        
+        default:
+            
+            return -1;
 
+    }
+    
+}
 
-
+//
+//  Prints to output files.
+//
+//  @param ch
+//      char, character from input array.
+//  @return
+//      int, numerical value representing a token.
+//
+void print(token *lexemes)
+{
+ 
+    FILE *ofp = NULL;
+    
+    lexemes = lexemes->next;    //  TODO: Fix bug with head. Temporay fix.
+    
+    //  Temporary print for bug testing.
+    printf("\nToken/Lexeme Output:\n");
+    while ( lexemes != NULL )
+    {
+        
+        printf("%s\t\t%d\n", lexemes->lexeme,lexemes->class);
+    
+        lexemes = lexemes->next;
+    }
+    
+}
