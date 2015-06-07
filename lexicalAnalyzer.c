@@ -18,15 +18,16 @@
 //  Constant declarations.
 #define MAX_SIZE 11
 #define MAX_NUMS 5
+#define MAX_SYMS 2
 
 //  I/O file names.
-#define INPUT_FILE "testing.txt"    //  filename change for testing
+#define INPUT_FILE "input.txt"
 #define CLEAN_OUTPUT_FILE "cleaninput.txt"
 #define TABLE_OUTPUT_FILE "lexemetable.txt"
 #define LIST_OUTPUT_FILE "lexemelist.txt"
 
 //  Internal representation of PL\0 Tokens
-typedef enum Tokens{    //  remove value assignments?
+typedef enum Tokens{
     nulsym = 1, identsym = 2, numbersym = 3, plussym = 4,
     minussym = 5, multsym = 6,  slashsym = 7, oddsym = 8,
     eqlsym = 9, neqsym = 10, lessym = 11, leqsym = 12,
@@ -43,19 +44,7 @@ typedef enum StateLabels{
     cState, callState, constState, doState, eState, elseState, endState,
     ifState, oddState, procedureState, readState, thenState, wState,
     whileState, writeState, varState
-    
 }state;
-
-//  Symbol table structure declaration.
-typedef struct symbolTable{ //  required?
-    
-    int kind;
-    char name[MAX_SIZE];
-    int val;
-    int level;
-    int adr;
-    
-}symTable;
 
 //  Token-Struct definition
 typedef struct tokenStruct{
@@ -71,15 +60,6 @@ char *word[] = {
     "null", "begin", "call", "const", "do", "else", "end",
     "if", "odd", "procedure","read", "then", "var", "while", "write"
 };
-
-//  Internal representation of reserved words.
-int wsym[]={
-    nulsym, beginsym, callsym, constsym, dosym, elsesym, endsym, ifsym,
-    oddsym, procsym, readsym, thensym, varsym, whilesym, writesym
-};
-
-//  Special symbol array.
-int ssym[256];  //  required?
 
 //  Function declarations.
 char* initialize();
@@ -109,7 +89,10 @@ int main(int argc, const char * argv[]) {
     
     //  Free allocated memory.
     free(cleaned);
-    free(lexemes);
+    
+    if ( !lexemes )
+        
+        free(lexemes);
     
     return 0;
     
@@ -135,7 +118,7 @@ char* initialize( )
         
         printf("Error: File not found.\n");
         
-        return head;
+        exit(1);
         
     }
     
@@ -160,10 +143,10 @@ char* initialize( )
         
     }
     else
-        
+
         printf("Error: Memory allocation failed.\n");
-    
-    printf("Input Code:\n%s\n\n",head);  //  bug printing
+
+//    printf("Input Code:\n%s\n\n",head);  //  bug printing
     
     return head;
     
@@ -201,7 +184,8 @@ char* clean(char *code)
                 
             }
             
-            i += 2;
+            i++;
+            continue;
             
         }
         
@@ -215,8 +199,8 @@ char* clean(char *code)
     //  Print to output file.
     
     FILE * ofp = fopen(CLEAN_OUTPUT_FILE, "w");
-    printf("Cleaned Code:\n%s\n\n",codeNoComments);  //  bug printing
-    fprintf(ofp,"%s\n",codeNoComments);
+//    printf("Cleaned Code:\n%s\n\n",codeNoComments);  //  bug printing
+    fprintf(ofp,"%s",codeNoComments);
     fclose(ofp);
     
     return codeNoComments;
@@ -237,22 +221,23 @@ token* tokenize(char * code)
     int i = 0, j;
     char ch;
     int state;
+
+    //  Create head and 'this' node for iteration.
+    token *head = createToken(NULL, &state, &j);
+    token *this = head;
     
-    token *head = (token*)malloc(sizeof(token));    // TODO: Fix head.
-    head->next = NULL;
-    head->class = -1;
-    
-    token *this = createToken(head, &state, &j);
+    //  Set initial state.
     state = firstState;
     
-    //  TODO: Check on whether *this is making the correct connection between nodes.
-    
+    //  Iterate throught the length of the code.
     while ( i < strlen(code) )
     {
         
+        //  Save reference to current character.
         ch = code[i];
         
-        if ( !isValid(ch) )    //  TODO: Check space.
+        //  Check for valid character.
+        if ( !isValid(ch) )
         {
             
             if ( j != 0 )
@@ -265,7 +250,6 @@ token* tokenize(char * code)
                 continue;
                 
             }
-            
             else
             {
                 
@@ -277,10 +261,11 @@ token* tokenize(char * code)
             
         }
         
-        //  TODO: Insert classes into switches.
+        //  Switch statement for states.
         switch ( state ) {
                 
-            case firstState:    //  First state for new lexeme.
+            //  Case for every possible scenario.
+            case firstState:
             {
                 
                 if ( ch == 'b' )
@@ -393,7 +378,7 @@ token* tokenize(char * code)
             case stringState:
             {
                 
-                if ( !isLetter(ch) || !isNumber(ch) )
+                if ( !isLetter(ch) && !isNumber(ch) )
                 {
                     
                     this = createToken(head, &state, &j);
@@ -441,7 +426,7 @@ token* tokenize(char * code)
 
                 else
 
-                    printf("Error: Exceeded maximum number size.");
+                    printf("Error: Exceeded maximum number size.\n");
                 
                 break;
                 
@@ -463,35 +448,35 @@ token* tokenize(char * code)
                     if ( this->class ==  lessym )
                     {
                         
-                        if ( ch == '=' )    //  <=
+                        if ( ch == '=' )
                         {
                             
                             this->class = leqsym;
                             
                         }
-                        else if (ch == '>') //  <>
+                        else if (ch == '>')
                         {
                             
                             this->class = geqsym;
                             
                         }
-                        else    //  <?
+                        else
                         {
-                            //  TODO: Find a better way for error handling.
-                            printf("Error: Invalid symbol.");
+                            
+                            printf("Error: Invalid symbol.\n");
                             
                             break;
                             
                         }
                         
                     }
-                    else if ( this->class == gtrsym && ch == '=' )   // >=
+                    else if ( this->class == gtrsym && ch == '=' )
                     {
                         
                         this->class = geqsym;
                         
                     }
-                    else if ( *this->lexeme == ':' && ch == '=' )   //  :=
+                    else if ( *this->lexeme == ':' && ch == '=' )
                     {
                         
                         this->class = becomessym;
@@ -499,16 +484,22 @@ token* tokenize(char * code)
                     }
                     else
                     {
-                        //  TODO: Find a better way for error handling.
-                        printf("Error: Invalid symbol.");
+
+                        printf("Error: Invalid symbol.\n");
                         
                         break;
                         
                     }
 
                 }
-
-                this->lexeme[j++] = ch;
+                
+                if ( j < MAX_SYMS )
+                    
+                    this->lexeme[j++] = ch;
+                
+                else
+                    
+                    printf("Error: Exceeded maximum symbol size.\n");
                 
                 break;
                 
@@ -1192,14 +1183,22 @@ token* tokenize(char * code)
                 
             }
                 
-        }   //  switch end
-    
+        }
+        
+        //  Increment code index.
         i++;
 
-    }   //  while end
+    }
     
-    //  TODO: Check on proper termination?
-    
+    //  Delete last token node if unused.
+    if ( this->class == -1 )
+    {
+        token *temp = this;
+        free(temp);
+        this = NULL;
+        
+    }
+        
     return head;
     
 }
@@ -1277,20 +1276,36 @@ int isValid(char ch)
 token* createToken(token *head, int *state, int *j)
 {
     
+    //  Change variables using pointer.
     *state = firstState;
     *j = 0;
     
     token *last = head;
     
-    //  Iterate to what is pointed to by last node.
-    while (last->next != NULL)
+    //  Scenario for null head.
+    if ( head == NULL )
+    {
         
+        last = (token*)malloc(sizeof(token));
+        last->next = NULL;
+        last->class = -1;
+        
+    }
+    else
+    {
+        
+        //  Iterate to what is pointed to by last node.
+        while (last->next != NULL)
+
+            last = last->next;
+
+        //  Allocate memory for new token node.
+        last->next = (token*)malloc(sizeof(token));
         last = last->next;
-    
-    last->next = (token*)malloc(sizeof(token));
-    last = last->next;
-    last->next = NULL;
-    last->class = -1;
+        last->next = NULL;
+        last->class = -1;
+        
+    }
     
     return last;
     
@@ -1376,35 +1391,46 @@ int setSymbolClass(char ch)
 void print(token *lexemes)
 {
  
+    token *this = lexemes;
+    
     FILE * ofp = fopen(TABLE_OUTPUT_FILE, "w");
 
-    
-    lexemes = lexemes->next;    //  TODO: Fix bug with head. Temporay fix.
-    token *temp = lexemes;
-    
-    //  Temporary print for bug testing.
+    //  Output printing for Lexeme Table file.
     fprintf(ofp,"%-12s%s", "lexeme","token type");
-    while ( lexemes != NULL )
+    
+    while ( this != NULL )
     {
         
-        fprintf(ofp,"\n%-12s%d", lexemes->lexeme,lexemes->class);
+        if ( this->class != -1 )
+            
+            fprintf(ofp,"\n%-12s%d", this->lexeme,this->class);
     
-        lexemes = lexemes->next;
+        this = this->next;
+        
+    }
+
+    fclose(ofp);
+    
+    ofp = fopen(LIST_OUTPUT_FILE, "w");
+    
+    this = lexemes;
+
+    //  Output printing for Lexeme List file.
+    while ( this != NULL )
+    {
+        
+        if ( this->class != -1 )
+        
+            fprintf(ofp,"%d ", this->class);
+        
+        if ( this->class == 2 || this->class == 3 )
+            
+            fprintf(ofp,"%s ", this->lexeme);
+        
+        this = this->next;
         
     }
     
     fclose(ofp);
-    ofp = fopen(LIST_OUTPUT_FILE, "w");
-
-    //  Temporary print for bug testing.
-    fprintf(ofp,"%-12s%s", "lexeme","token type");
-    while ( lexemes != NULL )
-    {
-        
-        fprintf(ofp,"\n%-12s%d", lexemes->lexeme,lexemes->class);
-        
-        lexemes = lexemes->next;
-        
-    }
     
 }
