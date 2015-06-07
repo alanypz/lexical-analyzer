@@ -84,7 +84,7 @@ int ssym[256];  //  required?
 //  Function declarations.
 char* initialize();
 char* clean(char *code);
-token* createToken(token *head);
+token* createToken(token *head, int *stage, int *j);
 token* tokenize(char * code);
 int isLetter(char ch);
 int isNumber(char ch);
@@ -215,7 +215,7 @@ char* clean(char *code)
     //  Print to output file.
     
     FILE * ofp = fopen(CLEAN_OUTPUT_FILE, "w");
-    printf("Cleaned Code:\n%s\n",codeNoComments);  //  bug printing
+    printf("Cleaned Code:\n%s\n\n",codeNoComments);  //  bug printing
     fprintf(ofp,"%s\n",codeNoComments);
     fclose(ofp);
     
@@ -234,7 +234,7 @@ char* clean(char *code)
 token* tokenize(char * code)
 {
 
-    int i = 0, j = 0;
+    int i = 0, j;
     char ch;
     int state = init;
     
@@ -242,7 +242,7 @@ token* tokenize(char * code)
     head->next = NULL;
     head->class = -1;
     
-    token *this = createToken(head);
+    token *this = createToken(head, &state, &j);
     state = firstState;
     
     //  TODO: Check on whether *this is making the correct connection between nodes.
@@ -258,9 +258,7 @@ token* tokenize(char * code)
             if ( j != 0 )
             {
                 
-                this = createToken(head);
-                state = firstState;
-                j = 0;
+                this = createToken(head, &state, &j);
                 
             }
             
@@ -394,9 +392,7 @@ token* tokenize(char * code)
                 if ( !isLetter(ch) || !isNumber(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -421,9 +417,7 @@ token* tokenize(char * code)
                     
                     printf("Error: Variable does not start with letter.\n");
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                 
@@ -447,22 +441,60 @@ token* tokenize(char * code)
                 if ( !isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
                 }
-                else
+                else if ( j == 1 )
                 {
                     
-                    //  TODO:   Identify two char symbols. Probably using helper function.
-                    
-                    /*
-                     TODO:
-                     neqsym = 10, leqsym = 12, geqsym = 14, becomessym = 20
-                     */
+                    if ( this->class ==  lessym )
+                    {
+                        
+                        if ( ch == '=' )    //  <=
+                        {
+                            
+                            this->class = leqsym;
+                            
+                        }
+                        else if (ch == '>') //  <>
+                        {
+                            
+                            this->class = geqsym;
+                            
+                        }
+                        else    //  <?
+                        {
+                            //  TODO: Find a better way for error handling.
+                            printf("Error: Invalid symbol.");
+                            
+                            break;
+                            
+                        }
+                        
+                        
+                    }
+                    else if ( this->class == gtrsym && ch == '=' )   // >=
+                    {
+                        
+                        this->class = geqsym;
+                        
+                    }
+                    else if ( *this->lexeme == ':' && ch == '=' )   //  :=
+                    {
+                        
+                        this->class = becomessym;
+                        
+                    }
+                    else
+                    {
+                        //  TODO: Find a better way for error handling.
+                        printf("Error: Invalid symbol.");
+                        
+                        break;
+                        
+                    }
 
                 }
 
@@ -478,9 +510,7 @@ token* tokenize(char * code)
                 {
                     
                     this->class = identsym;
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -497,9 +527,7 @@ token* tokenize(char * code)
                         !isNumber(code[i+1]) && !isLetter(code[i+1]) )
                     {
                         this->class = beginsym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -521,9 +549,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -562,9 +588,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -582,9 +606,7 @@ token* tokenize(char * code)
                     {
                         
                         this->class = callsym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -606,9 +628,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -626,9 +646,7 @@ token* tokenize(char * code)
                     {
                         
                         this->class = constsym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -650,10 +668,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this->class = identsym;
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -670,9 +685,7 @@ token* tokenize(char * code)
                         !isNumber(code[i+1]) && !isLetter(code[i+1]) )
                     {
                         this->class = dosym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -695,9 +708,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -736,9 +747,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -756,9 +765,7 @@ token* tokenize(char * code)
                     {
                         
                         this->class = endsym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -780,9 +787,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -800,9 +805,7 @@ token* tokenize(char * code)
                     {
                         
                         this->class = elsesym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -824,9 +827,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -844,9 +845,7 @@ token* tokenize(char * code)
                     {
                         
                         this->class = ifsym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -868,9 +867,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -888,9 +885,7 @@ token* tokenize(char * code)
                     {
                         
                         this->class = oddsym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -912,9 +907,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -932,9 +925,7 @@ token* tokenize(char * code)
                     {
                         
                         this->class = procsym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -956,9 +947,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -976,9 +965,7 @@ token* tokenize(char * code)
                     {
                         
                         this->class = readsym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -1000,9 +987,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -1020,9 +1005,7 @@ token* tokenize(char * code)
                     {
                         
                         this->class = thensym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -1044,9 +1027,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -1086,9 +1067,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -1106,9 +1085,7 @@ token* tokenize(char * code)
                     {
                         
                         this->class = readsym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -1130,9 +1107,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -1150,9 +1125,7 @@ token* tokenize(char * code)
                     {
                         
                         this->class = readsym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -1174,9 +1147,7 @@ token* tokenize(char * code)
                 if ( isSymbol(ch) )
                 {
                     
-                    this = createToken(head);
-                    state = firstState;
-                    j = 0;
+                    this = createToken(head, &state, &j);
                     
                     continue;
                     
@@ -1194,9 +1165,7 @@ token* tokenize(char * code)
                     {
                         
                         this->class = varsym;
-                        this = createToken(head);
-                        state = firstState;
-                        j = 0;
+                        this = createToken(head, &state, &j);
                         
                         break;
                         
@@ -1295,8 +1264,11 @@ int isValid(char ch)
 //  @return
 //      token*, pointer to the newly created struct node.
 //
-token* createToken(token *head)
+token* createToken(token *head, int *state, int *j)
 {
+    
+    *state = firstState;
+    *j = 0;
     
     token *last = head;
     
@@ -1403,7 +1375,7 @@ void print(token *lexemes)
     while ( lexemes != NULL )
     {
         
-        printf("%s\t\t%d\n", lexemes->lexeme,lexemes->class);
+        printf("%-10s%d\n", lexemes->lexeme,lexemes->class);
     
         lexemes = lexemes->next;
     }
