@@ -236,9 +236,9 @@ token* tokenize(char * code)
 
     int i = 0, j;
     char ch;
-    int state = init;
+    int state;
     
-    token *head = (token*)malloc(sizeof(token));
+    token *head = (token*)malloc(sizeof(token));    // TODO: Fix head.
     head->next = NULL;
     head->class = -1;
     
@@ -252,13 +252,17 @@ token* tokenize(char * code)
         
         ch = code[i];
         
-        if ( !isValid(ch) || ch == ' ' )
+        if ( !isValid(ch) )    //  TODO: Check space.
         {
             
             if ( j != 0 )
             {
                 
                 this = createToken(head, &state, &j);
+                
+                i++;
+                
+                continue;
                 
             }
             
@@ -412,6 +416,14 @@ token* tokenize(char * code)
             case numberState:
             {
                 
+                if ( isSymbol(ch) )
+                {
+                    
+                    this = createToken(head, &state, &j);
+                    
+                    continue;
+                    
+                }
                 if ( !isNumber(ch) )
                 {
                     
@@ -426,7 +438,6 @@ token* tokenize(char * code)
                 if ( j < MAX_NUMS )
                     
                     this->lexeme[j++] = ch;
-                
 
                 else
 
@@ -472,7 +483,6 @@ token* tokenize(char * code)
                             break;
                             
                         }
-                        
                         
                     }
                     else if ( this->class == gtrsym && ch == '=' )   // >=
@@ -1235,7 +1245,7 @@ int isNumber(char ch)
 int isSymbol (char ch)
 {
     
-    return ( ch >= ':' && ch <= '>' )  || ( ch >= '*' && ch <= '/' );
+    return ( ch >= ':' && ch <= '>' )  || ( ch >= '(' && ch <= '/' );
     
 }
 
@@ -1366,18 +1376,35 @@ int setSymbolClass(char ch)
 void print(token *lexemes)
 {
  
-    FILE *ofp = NULL;
+    FILE * ofp = fopen(TABLE_OUTPUT_FILE, "w");
+
     
     lexemes = lexemes->next;    //  TODO: Fix bug with head. Temporay fix.
+    token *temp = lexemes;
     
     //  Temporary print for bug testing.
-    printf("\nToken/Lexeme Output:\n");
+    fprintf(ofp,"%-12s%s", "lexeme","token type");
     while ( lexemes != NULL )
     {
         
-        printf("%-10s%d\n", lexemes->lexeme,lexemes->class);
+        fprintf(ofp,"\n%-12s%d", lexemes->lexeme,lexemes->class);
     
         lexemes = lexemes->next;
+        
+    }
+    
+    fclose(ofp);
+    ofp = fopen(LIST_OUTPUT_FILE, "w");
+
+    //  Temporary print for bug testing.
+    fprintf(ofp,"%-12s%s", "lexeme","token type");
+    while ( lexemes != NULL )
+    {
+        
+        fprintf(ofp,"\n%-12s%d", lexemes->lexeme,lexemes->class);
+        
+        lexemes = lexemes->next;
+        
     }
     
 }
