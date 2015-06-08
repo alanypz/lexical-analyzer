@@ -16,9 +16,9 @@
 #include <ctype.h>
 
 //  Constant declarations.
-#define MAX_SIZE 11
-#define MAX_NUMS 5
-#define MAX_SYMS 2
+#define MAX_SIZE 11 + 1
+#define MAX_NUMS 5 + 1
+#define MAX_SYMS 2 + 1
 
 //  I/O file names.
 #define INPUT_FILE "input.txt"
@@ -28,15 +28,15 @@
 
 //  Internal representation of PL\0 Tokens
 typedef enum Tokens{
-    nulsym, identsym, numbersym, plussym,
-    minussym, multsym,  slashsym, oddsym,
-    eqlsym, neqsym, lessym, leqsym,
-    gtrsym, geqsym, lparentsym, rparentsym,
-    commasym, semicolonsym, periodsym, becomessym,
-    beginsym, endsym, ifsym, thensym,
-    whilesym, dosym, callsym, constsym,
-    varsym, procsym, writesym, readsym,
-    elsesym
+    nulsym = 1, identsym = 2, numbersym = 3, plussym = 4,
+    minussym = 5, multsym = 6,  slashsym = 7, oddsym = 8,
+    eqlsym = 9, neqsym = 10, lessym = 11, leqsym = 12,
+    gtrsym = 13, geqsym = 14, lparentsym = 15, rparentsym = 16,
+    commasym = 17, semicolonsym = 18, periodsym = 19, becomessym = 20,
+    beginsym = 21, endsym = 22, ifsym = 23, thensym = 24,
+    whilesym = 25, dosym = 26, callsym = 27, constsym = 28,
+    varsym = 29, procsym = 30, writesym = 31, readsym = 32,
+    elsesym = 33
 }token_type;
 
 typedef enum StateLabels{
@@ -143,10 +143,10 @@ char* initialize( )
         
     }
     else
-
+        
         printf("Error: Memory allocation failed.\n");
-
-//    printf("Input Code:\n%s\n\n",head);  //  bug printing
+    
+    //    printf("Input Code:\n%s\n\n",head);  //  bug printing
     
     return head;
     
@@ -191,6 +191,7 @@ char* clean(char *code)
         
         codeNoComments[j++] = code[i];
         
+        
     }
     
     //  Free original input array.
@@ -199,7 +200,7 @@ char* clean(char *code)
     //  Print to output file.
     
     FILE * ofp = fopen(CLEAN_OUTPUT_FILE, "w");
-//    printf("Cleaned Code:\n%s\n\n",codeNoComments);  //  bug printing
+    //    printf("Cleaned Code:\n%s\n\n",codeNoComments);  //  bug printing
     fprintf(ofp,"%s",codeNoComments);
     fclose(ofp);
     
@@ -217,11 +218,11 @@ char* clean(char *code)
 //
 token* tokenize(char * code)
 {
-
+    
     int i = 0, j;
     char ch;
     int state;
-
+    
     //  Create head and 'this' node for iteration.
     token *head = createToken(NULL, &state, &j);
     token *this = head;
@@ -264,7 +265,7 @@ token* tokenize(char * code)
         //  Switch statement for states.
         switch ( state ) {
                 
-            //  Case for every possible scenario.
+                //  Case for every possible scenario.
             case firstState:
             {
                 
@@ -331,7 +332,7 @@ token* tokenize(char * code)
                 {
                     
                     this->class = identsym;
-                    state = wState;
+                    state = writeState;
                     
                 }
                 else if ( ch == 'v' )
@@ -360,7 +361,7 @@ token* tokenize(char * code)
                     
                     this->class = setSymbolClass(ch);
                     state = symbolState;
-                        
+                    
                 }
                 else
                 {
@@ -371,6 +372,7 @@ token* tokenize(char * code)
                 }
                 
                 this->lexeme[j++] = ch;
+                this->lexeme[j] = '\0';
                 
                 break;
                 
@@ -387,13 +389,16 @@ token* tokenize(char * code)
                     
                 }
                 
-                if ( j < MAX_SIZE )
-                
+                if ( j < MAX_SIZE - 1 )
+                {
                     this->lexeme[j++] = ch;
+                    this->lexeme[j] = '\0';
+                    
+                }
                 
                 else
                     
-                    printf("Error: Exceeded maximum identifier size.\n");
+                    printf("Error: Exceeded maximum identifier size with '%c'.\n", ch);
                 
                 break;
                 
@@ -417,16 +422,17 @@ token* tokenize(char * code)
                     this = createToken(head, &state, &j);
                     
                     continue;
-                
+                    
                 }
                 
-                if ( j < MAX_NUMS )
-                    
+                if ( j < MAX_NUMS - 1 )
+                {
                     this->lexeme[j++] = ch;
-
+                    this->lexeme[j] = '\0';
+                }
                 else
-
-                    printf("Error: Exceeded maximum number size.\n");
+                    
+                    printf("Error: Exceeded maximum number size with '%c'.\n", ch);
                 
                 break;
                 
@@ -484,22 +490,23 @@ token* tokenize(char * code)
                     }
                     else
                     {
-
+                        
                         printf("Error: Invalid symbol.\n");
                         
                         break;
                         
                     }
-
+                    
                 }
                 
-                if ( j < MAX_SYMS )
-                    
+                if ( j < MAX_SYMS - 1 )
+                {
                     this->lexeme[j++] = ch;
-                
+                    this->lexeme[j] = '\0';
+                }
                 else
                     
-                    printf("Error: Exceeded maximum symbol size.\n");
+                    printf("Error: Exceeded maximum symbol size with character '%c'.\n", ch);
                 
                 break;
                 
@@ -520,6 +527,7 @@ token* tokenize(char * code)
                 char* str = "begin";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -560,6 +568,8 @@ token* tokenize(char * code)
                 char* str2 = "const";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
+                
                 
                 if ( ch == str1[j] )
                 {
@@ -569,17 +579,17 @@ token* tokenize(char * code)
                 }
                 else if ( ch == str2[j] )
                 {
-        
+                    
                     state = constState;
-                
+                    
                 }
                 else
                     
                     state = stringState;
-                    
+                
                 
                 j++;
-
+                
                 break;
                 
             }
@@ -598,6 +608,7 @@ token* tokenize(char * code)
                 char* str = "call";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -625,7 +636,7 @@ token* tokenize(char * code)
             }
             case constState:
             {
-
+                
                 if ( isSymbol(ch) )
                 {
                     
@@ -634,10 +645,11 @@ token* tokenize(char * code)
                     continue;
                     
                 }
-            
+                
                 char* str = "const";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -678,6 +690,7 @@ token* tokenize(char * code)
                 char* str = "do";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -719,6 +732,7 @@ token* tokenize(char * code)
                 char* str2 = "else";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str1[j] )
                 {
@@ -744,7 +758,7 @@ token* tokenize(char * code)
             }
             case endState:
             {
-             
+                
                 if ( isSymbol(ch) )
                 {
                     
@@ -757,6 +771,7 @@ token* tokenize(char * code)
                 char* str = "end";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -797,6 +812,7 @@ token* tokenize(char * code)
                 char* str = "else";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -837,6 +853,7 @@ token* tokenize(char * code)
                 char* str = "if";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -877,6 +894,7 @@ token* tokenize(char * code)
                 char* str = "odd";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -917,6 +935,7 @@ token* tokenize(char * code)
                 char* str = "procedure";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -957,6 +976,7 @@ token* tokenize(char * code)
                 char* str = "read";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -997,6 +1017,7 @@ token* tokenize(char * code)
                 char* str = "then";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -1034,21 +1055,22 @@ token* tokenize(char * code)
                     
                 }
                 
-                char* str1 = "while";
-                char* str2 = "write";
+                char* str1 = "call";
+                char* str2 = "const";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str1[j] )
                 {
                     
-                    state = whileState;
+                    state = callState;
                     
                 }
                 else if ( ch == str2[j] )
                 {
                     
-                    state = writeState;
+                    state = constState;
                     
                 }
                 else
@@ -1077,6 +1099,7 @@ token* tokenize(char * code)
                 char* str = "while";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -1117,6 +1140,7 @@ token* tokenize(char * code)
                 char* str = "while";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -1157,6 +1181,7 @@ token* tokenize(char * code)
                 char *str = "var";
                 
                 this->lexeme[j] = ch;
+                this->lexeme[j+1] = '\0';
                 
                 if ( ch == str[j] )
                 {
@@ -1187,7 +1212,7 @@ token* tokenize(char * code)
         
         //  Increment code index.
         i++;
-
+        
     }
     
     //  Delete last token node if unused.
@@ -1198,7 +1223,7 @@ token* tokenize(char * code)
         this = NULL;
         
     }
-        
+    
     return head;
     
 }
@@ -1296,9 +1321,9 @@ token* createToken(token *head, int *state, int *j)
         
         //  Iterate to what is pointed to by last node.
         while (last->next != NULL)
-
+            
             last = last->next;
-
+        
         //  Allocate memory for new token node.
         last->next = (token*)malloc(sizeof(token));
         last = last->next;
@@ -1371,11 +1396,11 @@ int setSymbolClass(char ch)
         case '.':
             
             return periodsym;
-        
+            
         default:
             
             return -1;
-
+            
     }
     
 }
@@ -1390,11 +1415,11 @@ int setSymbolClass(char ch)
 //
 void print(token *lexemes)
 {
- 
+    
     token *this = lexemes;
     
     FILE * ofp = fopen(TABLE_OUTPUT_FILE, "w");
-
+    
     //  Output printing for Lexeme Table file.
     fprintf(ofp,"%-12s%s", "lexeme","token type");
     
@@ -1404,23 +1429,23 @@ void print(token *lexemes)
         if ( this->class != -1 )
             
             fprintf(ofp,"\n%-12s%d", this->lexeme,this->class);
-    
+        
         this = this->next;
         
     }
-
+    
     fclose(ofp);
     
     ofp = fopen(LIST_OUTPUT_FILE, "w");
     
     this = lexemes;
-
+    
     //  Output printing for Lexeme List file.
     while ( this != NULL )
     {
         
         if ( this->class != -1 )
-        
+            
             fprintf(ofp,"%d ", this->class);
         
         if ( this->class == 2 || this->class == 3 )

@@ -1,5 +1,5 @@
 lexeme      token type
-var¿        29
+var         29
 x           2
 ,           17
 y           2
