@@ -28,15 +28,15 @@
 
 //  Internal representation of PL\0 Tokens
 typedef enum Tokens{
-    nulsym = 1, identsym = 2, numbersym = 3, plussym = 4,
-    minussym = 5, multsym = 6,  slashsym = 7, oddsym = 8,
-    eqlsym = 9, neqsym = 10, lessym = 11, leqsym = 12,
-    gtrsym = 13, geqsym = 14, lparentsym = 15, rparentsym = 16,
-    commasym = 17, semicolonsym = 18, periodsym = 19, becomessym = 20,
-    beginsym = 21, endsym = 22, ifsym = 23, thensym = 24,
-    whilesym = 25, dosym = 26, callsym = 27, constsym = 28,
-    varsym = 29, procsym = 30, writesym = 31, readsym = 32,
-    elsesym = 33
+    nulsym, identsym, numbersym, plussym,
+    minussym, multsym,  slashsym, oddsym,
+    eqlsym, neqsym, lessym, leqsym,
+    gtrsym, geqsym, lparentsym, rparentsym,
+    commasym, semicolonsym, periodsym, becomessym,
+    beginsym, endsym, ifsym, thensym,
+    whilesym, dosym, callsym, constsym,
+    varsym, procsym, writesym, readsym,
+    elsesym
 }token_type;
 
 typedef enum StateLabels{
@@ -331,7 +331,7 @@ token* tokenize(char * code)
                 {
                     
                     this->class = identsym;
-                    state = writeState;
+                    state = wState;
                     
                 }
                 else if ( ch == 'v' )
@@ -1034,21 +1034,21 @@ token* tokenize(char * code)
                     
                 }
                 
-                char* str1 = "call";
-                char* str2 = "const";
+                char* str1 = "while";
+                char* str2 = "write";
                 
                 this->lexeme[j] = ch;
                 
                 if ( ch == str1[j] )
                 {
                     
-                    state = callState;
+                    state = whileState;
                     
                 }
                 else if ( ch == str2[j] )
                 {
                     
-                    state = constState;
+                    state = writeState;
                     
                 }
                 else
