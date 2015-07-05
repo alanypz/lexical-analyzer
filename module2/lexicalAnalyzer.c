@@ -1306,6 +1306,7 @@ token* createToken(token *head, int *state, int *j)
     *j = 0;
     
     token *last = head;
+    char empty[12] = {'\0','\0','\0','\0','\0','\0','\0','\0','\0','\0','\0','\0'};
     
     //  Scenario for null head.
     if ( head == NULL )
@@ -1314,6 +1315,7 @@ token* createToken(token *head, int *state, int *j)
         last = (token*)malloc(sizeof(token));
         last->next = NULL;
         last->class = -1;
+        strncpy(last->lexeme, empty, sizeof(sizeof(last->lexeme)));
         
     }
     else
@@ -1329,6 +1331,7 @@ token* createToken(token *head, int *state, int *j)
         last = last->next;
         last->next = NULL;
         last->class = -1;
+        strncpy(last->lexeme, empty, sizeof(sizeof(last->lexeme)));
         
     }
     
@@ -1418,52 +1421,27 @@ void print(token *lexemes)
     
     token *this = lexemes;
     
-    FILE * ofp = fopen(TABLE_OUTPUT_FILE, "w");
+    FILE * ofpT = fopen(TABLE_OUTPUT_FILE, "w");
+    FILE * ofpL = fopen(LIST_OUTPUT_FILE, "w");
     
     //  Output printing for Lexeme Table file.
-    fprintf(ofp,"%-12s%s", "lexeme","token type");
+    fprintf(ofpT,"%-12s%s", "lexeme","token type");
     
-    while ( this != NULL )
+    while ( this->next != NULL )
     {
         
-        if ( this->class != -1 )
-            
-            fprintf(ofp,"\n%-12s%d", this->lexeme,this->class);
-        
-        if (this->next == NULL)
-            
-            break;
-        
-        this = this->next;
-        
-    }
-    
-    fclose(ofp);
-    
-    ofp = fopen(LIST_OUTPUT_FILE, "w");
-    
-    this = lexemes;
-    
-    //  Output printing for Lexeme List file.
-    while ( this != NULL )
-    {
-        
-        if ( this->class != -1 )
-            
-            fprintf(ofp,"%d ", this->class);
+        fprintf(ofpT,"\n%-12s%d", this->lexeme,this->class);
+        fprintf(ofpL,"%d ", this->class);
         
         if ( this->class == 2 || this->class == 3 )
-            
-            fprintf(ofp,"%s ", this->lexeme);
-        
-        if (this->next == NULL)
-            
-            break;
+    
+            fprintf(ofpL,"%s ", this->lexeme);
         
         this = this->next;
         
     }
     
-    fclose(ofp);
+    fclose(ofpT);
+    fclose(ofpL);
     
 }
