@@ -1430,6 +1430,10 @@ void print(token *lexemes)
             
             fprintf(ofp,"\n%-12s%d", this->lexeme,this->class);
         
+        if (this->next == NULL)
+            
+            break;
+        
         this = this->next;
         
     }
@@ -1451,6 +1455,10 @@ void print(token *lexemes)
         if ( this->class == 2 || this->class == 3 )
             
             fprintf(ofp,"%s ", this->lexeme);
+        
+        if (this->next == NULL)
+            
+            break;
         
         this = this->next;
         
