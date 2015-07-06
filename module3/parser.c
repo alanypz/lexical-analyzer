@@ -14,7 +14,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <errno.h>
 
 //  I/O file names.
 #define INPUT_FILE "lexemelist.txt"
@@ -37,10 +36,6 @@ typedef enum Tokens{
     elsesym = 33
 }token_type;
 
-typedef enum Kinds{
-    cons = 1, vari = 2, proc = 3
-}kind_type;
-
 typedef struct {
     int kind;       // const = 1, var = 2, proc = 3
     char name[MAX_SIZE];  // name up to 11 chars
@@ -60,21 +55,20 @@ FILE *ifp, *ofp = NULL;
 symbol symbol_table[MAX_SYMBOL_TABLE_SIZE];
 instruction vm_code[MAX_CODE_LENGTH];
 int c = 0,      //  Index for the vm code.
-    lex = 0,    //  Lexigraphical level.
-    symi = 0,   //  Index for symbol table.
-    token = -1, //  Token class.
-    valid = 1;  //  Boolean. 1 = no errors, 0 = errors.
+symi = 0,   //  Index for symbol table.
+token = -1, //  Token class.
+valid = 1;  //  Boolean. 1 = no errors, 0 = errors.
 
 //  Function declarations.
 void parser();
-void program();
-void procedure();
-void block();
-void statement();
-void condition();
-void expression();
-void termParser();
-void factor();
+void program(int lex);
+void procedure(int lex);
+void block(int lex);
+void statement(int lex);
+void condition(int lex);
+void expression(int lex);
+void term(int lex);
+void factor(int lex);
 void error();
 
 void record(int kind, char name[], int val, int level, int addr);  //  Write a new symbol to symbol table.
@@ -95,7 +89,7 @@ int main(int argc, const char * argv[]) {
     int i;
     
     for ( i = 0; i <= c; i ++ )
-
+        
         fprintf(ofp, "%d %d %d\n", vm_code[i].op, vm_code[i].l, vm_code[i].m);
     
     fclose(ifp);
@@ -108,21 +102,21 @@ int main(int argc, const char * argv[]) {
 // Wrapper function for the parsing logic.
 void parser()
 {
-
-    //  Initiate parsing by calling procedure parser function.
-    program();
     
+    int lex = 0;
+    //  Initiate parsing by calling procedure parser function.
+    program(lex);
     
 }
 
-void program()
+void program(int lex)
 {
     
     fscanf(ifp, "%d", &token);
     
     translate(6, lex, 5);
     
-    block();
+    block(lex);
     
     if (token != periodsym && valid)
         
@@ -134,7 +128,7 @@ void program()
     
 }
 
-void block()
+void block(int lex)    //  Alan
 {
     
     int kind, val;
@@ -143,278 +137,588 @@ void block()
     if (token == constsym)
     {
         
+        kind = constsym;
+        
         do
         {
             
-            getToken();
+            fscanf(ifp, "%d", &token);
             
-            if (token != identsym)
+            if (token != identsym )
+            {
+                error(4);
                 
-                error();
-            
-            getToken();
+                return;
+                
+            }
+            else
+            {
+                
+                fscanf(ifp, "%s", name);
+                
+            }
             
             if (token != eqlsym)
+            {
                 
-                error();
+                if (token == becomessym)
+                    
+                    error(1);
+                
+                else
+                    
+                    error(3);
+                
+                return;
+                
+            }
             
-            getToken();
+            fscanf(ifp, "%d", &token);
             
             if (token != numbersym)
+            {
                 
-                error();
+                error(2);
+                
+                return;
+                
+            }
+            else
+            {
+                
+                fscanf(ifp, "%d", &val);
+                
+            }
+            
+            record(kind, name, val, 0, 0);
+            
+            fscanf(ifp, "%d", &token);
             
         }
-        while ( token != commasym );
-        
+        while (token == commasym);
         
         if (token != semicolonsym)
+        {
             
-            error();
+            error(5);
+            
+            return;
+            
+        }
         
-        getToken();
+        fscanf(ifp, "%d", &token);
         
     }
     
     if (token == varsym)
     {
         
+        int j = 3;
+        
+        kind = varsym;
+        
         do
         {
-            getToken();
+            fscanf(ifp, "%d", &token);
             
-            if (token != identsym)
+            if (token != identsym && valid)
+            {
+                error(4);
                 
-                error();
+                return;
+                
+            }
+            else
+            {
+                
+                fscanf(ifp, "%s", name);
+                
+            }
             
-            getToken();
-
+            record(kind, name, 0,  lex, j);
+            
+            fscanf(ifp,"%d", &token);
+            
+            j++;
+            
+            
         }
-        while ( token != commasym );
+        while ( token == commasym );
         
-        if (token != semicolonsym)
+        if (token != semicolonsym && valid)
+        {
             
-            error();
+            error(5);
+            
+            return;
+            
+        }
         
-        getToken();
+        fscanf(ifp,"%d", &token);
         
     }
     
     while (token == procsym)
     {
         
-        getToken();
+        kind = procsym;
         
-        if (token != identsym)
+        fscanf(ifp,"%d", &token);
+        
+        if (token != identsym && valid)
+        {
+            error(4);
             
-            error();
-        
-        getToken();
-        
-        if (token != semicolonsym)
+            return;
             
-            error();
-        
-        getToken();
-        
-        block();
-        
-        if (token != semicolonsym)
+        }
+        else
+        {
             
-            error();
+            fscanf(ifp, "%s", name);
+            
+        }
         
-        getToken();
+        record(kind, name, 0,  lex, c);
+        
+        fscanf(ifp, "%d", &token);
+        
+        if (token != semicolonsym && valid)
+        {
+            
+            error(6);
+            
+            return;
+            
+        }
+        
+        fscanf(ifp, "%d", &token);
+        
+        block(lex + 1);
+        
+        if (token != semicolonsym && valid)
+        {
+            
+            error(5);
+            
+            return;
+            
+        }
+        
+        fscanf(ifp, "%d", &token);
+        
+        translate(2, 0, 0);
         
     }
     
-    statement();
-
+    statement(lex);
+    
 }
 
-void statement()
+void statement(int lex)    //  Justin
 {
-    
     
     if (token == identsym)
     {
         
-        getToken();
+        char name[MAX_SIZE];
         
-        if (token != becomessym)
+        fscanf(ifp, "%s", name);
+        
+        int index = find(name);
+        
+        if (index == -1 && valid)
+        {
             
-            error();
+            error(11);
+            
+            return;
+            
+        }
         
-        getToken();
+        if (symbol_table[index].kind != varsym  && valid)
+        {
+            
+            error(12);
+            
+            return;
+            
+        }
         
-        expression();
+        fscanf(ifp, "%d", &token);
+        
+        if (token != becomessym && valid)
+        {
+            
+            error(13);
+            
+        }
+        
+        fscanf(ifp, "%d", &token);
+        
+        expression(lex);
+        
+        translate(4, symbol_table[index].level, symbol_table[index].addr);
         
     }
     else if (token == callsym)
     {
         
-        getToken();
+        fscanf(ifp,"%d", &token);
         
-        if (token != identsym)
+        if (token != identsym && valid)
+        {
             
-            error();
+            error(14);
+            
+            return;
+            
+        }
         
-        getToken();
+        char name[MAX_SIZE];
+        
+        fscanf(ifp,"%s", name);
+        
+        int index = find(name);
+        
+        if (index == -1  && valid)
+        {
+            
+            error(11);
+            
+            return;
+            
+        }
+        
+        translate(5, symbol_table[index].level, symbol_table[index].addr);
+        
+        translate(6, lex, 4);
+        
+        fscanf(ifp,"%d", &token);
         
     }
     else if (token == beginsym)
     {
         
-        getToken();
+        fscanf(ifp,"%d", &token);
         
-        statement();
+        statement(lex);
         
         while (token == semicolonsym)
         {
             
-            getToken();
+            fscanf(ifp,"%d", &token);
             
-            statement();
+            statement(lex);
             
         }
         
-        if (token != endsym)
+        if (token != endsym && valid)
+        {
             
-            error();
-        
-        getToken();
-        
-        if (token != endsym)
+            error(9);
             
-            error();
-    
+            return;
+            
+        }
+        
+        fscanf(ifp,"%d", &token);
+        
     }
     else if (token == ifsym)
     {
         
-        getToken();
+        fscanf(ifp,"%d", &token);
         
-        condition();
+        condition(lex);
         
-        if (token != thensym)
+        if (token != thensym && valid)
+        {
             
-            error();
+            error(16);
+            
+            return;
+        }
         
-        getToken();
+        else
+        {
+            
+            fscanf(ifp,"%d", &token);
+            
+        }
         
-        statement();
+        int c1 = c;
+        
+        translate(8, 0, 0);
+        
+        statement( lex);
+        
+        if (token == elsesym)
+        {
+            
+            fscanf(ifp,"%d", &token);
+            
+            int c2 = c;
+            
+            translate(7, 0, 0);
+            
+            vm_code[c1].m = c;
+            
+            statement(lex);
+            
+            vm_code[c2].m = c;
+            
+        }
+        
+        else
+        {
+            
+            vm_code[c1].m = c;
+            
+        }
         
     }
     else if (token == whilesym)
     {
         
-        getToken();
+        int c1 = c;
         
-        condition();
+        fscanf(ifp,"%d", &token);
         
-        if (token != dosym)
+        condition(lex);
+        
+        int c2 = c;
+        
+        translate(8, 0, 0);
+        
+        if (token != dosym && valid)
+        {
             
-            error();
+            error(18);
+            
+            return;
+            
+        }
         
-        getToken();
+        else
+        {
+            
+            fscanf(ifp,"%d", &token);
+            
+        }
         
-        statement();
-
+        statement(lex);
+        
+        translate(7, 0, c1);
+        
+        vm_code[c2].m = c;
+        
     }
     
 }
 
-void condition()
+void condition(int lex)    //  Alan
 {
     
     if (token == oddsym)
     {
         
-        getToken();
+        fscanf(ifp, "%d", &token);
         
-        expression();
+        expression(lex);
+        
+        translate(2, 0, 6);
         
     }
     else
     {
         
-        expression();
+        expression(lex);
         
-        if (token != nulsym)   //  bug: change this conditional to check for relation symbols.
-
-            error();
+        int rational = token;
         
-        getToken();
+        if ((token < eqlsym || token > geqsym) && valid)
+        {
+            
+            error(20);
+            
+            return;
+            
+        }
         
-        expression();
+        fscanf(ifp, "%d", &token);
+        
+        expression(lex);
+        
+        translate(2, 0, rational - 1);
         
     }
     
 }
 
-void expression()
+void expression(int lex) //    Justin
 {
     
-    if (token == plussym || token == minussym)
-        
-        getToken();
+    int operation;
     
-    termParser();
+    if (token == plussym || token == minussym)
+    {
+    
+        operation = token;
+        
+        fscanf(ifp, "%d", &token);
+        
+        term(lex);
+        
+        if (operation == minussym)
+        {
+            translate(2, 0, 1);
+        }
+        
+    }
+    else
+        
+        term(lex);
+    
     
     while (token == plussym || token == minussym)
     {
         
-        getToken();
+        operation = token;
         
-        termParser();
+        fscanf(ifp, "%d", &token);
+        
+        term(lex);
+        
+        if (operation == plussym)
+        {
+            
+            translate(2, 0, 2);
+            
+        }
+        else
+        {
+            
+            translate(2, 0, 4);
+            
+        }
+        
         
     }
     
 }
 
-void termParser()
+void term(int lex)   // Alan
 {
     
-    factor();
+    int operation = 0;
+    
+    factor(lex);
     
     while (token == multsym || token == slashsym)
     {
         
-        getToken();
+        operation = token;
         
-        factor();
+        fscanf(ifp, "%d", &token);
+        
+        factor(lex);
+        
+        if (operation == multsym)
+        {
+            
+            translate(2, 0, 4);
+            
+        }
+        else
+        {
+            
+            translate(2, 0, 5);
+            
+        }
         
     }
     
 }
 
-void factor()
+void factor(int lex) //    Justin
 {
     
+    char name[12];
+    
+    int index, val;
+    
     if (token == identsym)
+    {
         
-        getToken();
+        fscanf(ifp, "%s", name);
+        
+        index = find(name);
+        
+        if (symbol_table[index].kind == constsym)
+        {
+            
+            translate(1, 0, symbol_table[index].val);
+            
+        }
+        else if (symbol_table[index].kind == varsym)
+        {
+            
+            translate(3, symbol_table[index].level, symbol_table[index].addr);
+            
+        }
+        else
+        {
+            
+            error(21);
+            
+            return;
+            
+        }
+        
+        fscanf(ifp,"%d", &token);
+        
+    }
     
     else if (token == numbersym)
+    {
         
-        getToken();
-
+        fscanf(ifp, "%d", &val);
+        
+        translate(1, 0, val);
+        
+        fscanf(ifp,"%d", &token);
+        
+    }
+    
     else if (token == lparentsym)
     {
         
-        getToken();
+        fscanf(ifp,"%d", &token);
         
-        expression();
+        expression(lex);
         
-        if (token != rparentsym)
+        if (token != rparentsym && valid)
+        {
             
-            error();
+            error(22);
+            
+            return;
+            
+        }
         
-        getToken();
+        fscanf(ifp,"%d", &token);
         
     }
+    
     else
+    {
         
-        error();
+        error(19);
+        
+        return;
+        
+    }
     
 }
 
@@ -450,10 +754,10 @@ void record(int kind, char name[], int val, int level, int addr)
     if ( find(name) == -1 )
     {
         
-        if (kind == cons)
+        if (kind == constsym)
         {
             
-            symbol_table[symi].kind = kind;
+            symbol_table[symi].kind = constsym;
             strcpy(symbol_table[symi].name, name);
             symbol_table[symi].val = val;
             
@@ -487,7 +791,7 @@ int find(char name[])
         {
             
             if ( strcmp(symbol_table[i].name, name) == 0 )
-            
+                
                 return i;
             
             else
@@ -510,7 +814,9 @@ void translate(int op, int l, int m)
         
         vm_code[c].op = op;
         vm_code[c].l = l;
-        vm_code[c++].m = m;
+        vm_code[c].m = m;
+        
+        c++;
         
     }
     else
@@ -528,7 +834,7 @@ void error(int err)
     
     switch (err)
     {
-        
+            
         case 1:
         {
             
@@ -740,7 +1046,7 @@ void error(int err)
         default:
             
             printf("Error: Error not vald=id.\n");    //bug
-    
+            
     }
-
+    
 }
