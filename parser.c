@@ -119,8 +119,6 @@ void parser()       //  TODO: Maybe function should be comfined with main()?
     int lex = 0;
     //  Initiate parsing by calling procedure parser function.
     program(lex);
-
-//    translate(9, 0, 2);
     
 }
 
