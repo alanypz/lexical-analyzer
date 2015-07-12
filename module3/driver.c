@@ -11,13 +11,13 @@
 //
 
 #include <stdio.h>
-#include "lexicalAnalyzer.c"
-#include "parser.c"
-#include "vm.c"
+#include "lexicalAnalyzer.h"
+#include "parser.h"
+#include "vm.h"
 
 void printToScreen(char* filename, char* command, int argc, const char * argv[]);
 
-int main (int argc, const char * argv[])
+int main(int argc, const char * argv[])
 {
     
     char lexemes[2] = "-l";
@@ -86,4 +86,3 @@ void printToScreen(char* filename, char* command, int argc, const char * argv[])
     fclose(fp);
     
 };
-
