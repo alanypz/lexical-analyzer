@@ -75,7 +75,7 @@ void record(int kind, char name[], int val, int level, int addr);  //  Write a n
 int find(char name[]);    //  Searches for an existing symbol in symbol table.
 void translate(int op, int l, int m);   //  Conversion to VM language.
 
-int main(int argc, const char * argv[]) {
+int startParser() {
     
     ifp = fopen(INPUT_FILE, "r");
     ofp = fopen(VM_OUTPUT_FILE, "w");
@@ -87,7 +87,7 @@ int main(int argc, const char * argv[]) {
         
         return 1;
         
-
+        
     }
     
     parser();
@@ -107,8 +107,8 @@ int main(int argc, const char * argv[]) {
     
     printf("Number of VM instructions: %d\n", c);      //   bug testing print
     printf("Number of symbols in symbol table: %d\n", symi);    //   bug testing print
-        
-    return 0;
+    
+    return (valid == 1) ? 0 : 1;
     
 }
 
@@ -119,8 +119,8 @@ void parser()       //  TODO: Maybe function should be comfined with main()?
     int lex = 0;
     //  Initiate parsing by calling procedure parser function.
     program(lex);
-
-//    translate(9, 0, 2);
+    
+    //    translate(9, 0, 2);
     
 }
 
@@ -230,7 +230,7 @@ void block(int lex)    //  Alan
     if (token == varsym)
     {
         
-        int j = 3;
+        int j = 4;
         
         kind = varsym;
         
@@ -495,6 +495,79 @@ void statement(int lex)    //  Justin
         }
         
     }
+    if (token == readsym)
+    {
+        
+        fscanf(ifp,"%d", &token);
+        
+        if (token != identsym && valid)
+        {
+            
+            error(19);
+            
+            return;
+            
+        }
+        
+        char name[12];
+        
+        fscanf(ifp,"%s", name);
+        
+        int position = find(name);
+        
+        if (position == -1  && valid)
+        {
+            
+            error(11);
+            
+            return;
+            
+        }
+        
+        translate(9, 0, 1);
+        
+        translate(4, symbol_table[position].level, symbol_table[position].addr);
+        
+        fscanf(ifp,"%d", &token);
+        
+    }
+    
+    if (token == writesym)
+    {
+        
+        fscanf(ifp, "%d", &token);
+        
+        if (token != identsym && valid)
+        {
+            
+            error(19);
+            
+            return;
+            
+        }
+        
+        char name[12];
+        
+        fscanf(ifp, "%s", name);
+        
+        int position = find(name);
+        
+        if (position == -1  && valid)
+        {
+            
+            error(11);
+            
+            return;
+            
+        }
+        
+        translate(3, symbol_table[position].level, symbol_table[position].addr);
+        
+        translate(9, 0, 0);
+        
+        fscanf(ifp,"%d", &token);
+        
+    }
     else if (token == whilesym)
     {
         
@@ -580,7 +653,7 @@ void expression(int lex) //    Justin
     
     if (token == plussym || token == minussym)
     {
-    
+        
         operation = token;
         
         fscanf(ifp, "%d", &token);
