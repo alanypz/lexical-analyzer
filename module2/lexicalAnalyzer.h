@@ -1137,7 +1137,7 @@ token* tokenize(char * code)
                     
                 }
                 
-                char* str = "while";
+                char* str = "write";
                 
                 this->lexeme[j] = ch;
                 this->lexeme[j+1] = '\0';
