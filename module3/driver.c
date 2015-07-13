@@ -38,7 +38,7 @@ int main(int argc, const char * argv[])
             
             if (startVM() == 0)    //  Run vm.c
             {
-                
+            
                 printToScreen("stacktrace.txt",virtualMachine, argc, argv);
                 
             }
@@ -65,6 +65,7 @@ int main(int argc, const char * argv[])
         
     }
     
+    system("pause");
 }
 
 void printToScreen(char* filename, char* command, int argc, const char * argv[])
