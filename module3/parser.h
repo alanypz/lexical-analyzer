@@ -1,5 +1,5 @@
 //
-//  parser.c
+//  parser.h
 //  Parser & Code Generator
 //
 //  UCF - COP 3402: Systems Software
@@ -70,10 +70,11 @@ void expression(int lex);
 void term(int lex);
 void factor(int lex);
 void error();
+void getToken();
 
 void record(int kind, char name[], int val, int level, int addr);  //  Write a new symbol to symbol table.
 int find(char name[]);    //  Searches for an existing symbol in symbol table.
-void translate(int op, int l, int m);   //  Conversion to VM language.
+void emit(int op, int l, int m);   //  Conversion to VM language.
 
 int startParser() {
     
@@ -117,14 +118,14 @@ void parser()       //  TODO: Maybe function should be comfined with main()?
     //  Initiate parsing by calling procedure parser function.
     program(lex);
     
-    //    translate(9, 0, 2);
+    //    emit(9, 0, 2);
     
 }
 
 void program(int lex)
 {
     
-    fscanf(ifp, "%d", &token_parser);
+    getToken( );
     
     block(lex);
     
@@ -134,7 +135,7 @@ void program(int lex)
     
     if (valid)
         
-        translate(9, 0, 2);
+        emit(9, 0, 2);
     
 }
 
@@ -152,7 +153,7 @@ void block(int lex)    //  Alan
         do
         {
             
-            fscanf(ifp, "%d", &token_parser);
+            getToken( );
             
             if (token_parser != identsymP )
             {
@@ -168,7 +169,7 @@ void block(int lex)    //  Alan
                 
             }
             
-            fscanf(ifp, "%d", &token_parser);
+            getToken( );
             
             if (token_parser != eqlsymP)
             {
@@ -185,7 +186,7 @@ void block(int lex)    //  Alan
                 
             }
             
-            fscanf(ifp, "%d", &token_parser);
+            getToken( );
             
             if (token_parser != numbersymP)
             {
@@ -204,7 +205,7 @@ void block(int lex)    //  Alan
             
             record(kind, name, val, 0, 0);
             
-            fscanf(ifp, "%d", &token_parser);
+            getToken( );
             
         }
         while (token_parser == commasymP);
@@ -218,7 +219,7 @@ void block(int lex)    //  Alan
             
         }
         
-        fscanf(ifp, "%d", &token_parser);
+        getToken( );
         
     }
     
@@ -231,7 +232,7 @@ void block(int lex)    //  Alan
         
         do
         {
-            fscanf(ifp, "%d", &token_parser);
+            getToken( );
             
             if (token_parser != identsymP && valid)
             {
@@ -270,7 +271,7 @@ void block(int lex)    //  Alan
         
     }
     
-    translate(6, lex, j);
+    emit(6, lex, j);
     
     while (token_parser == procsymP)
     {
@@ -295,7 +296,7 @@ void block(int lex)    //  Alan
         
         record(kind, name, 0,  lex, c);
         
-        fscanf(ifp, "%d", &token_parser);
+        getToken( );
         
         if (token_parser != semicolonsymP && valid)
         {
@@ -306,7 +307,7 @@ void block(int lex)    //  Alan
             
         }
         
-        fscanf(ifp, "%d", &token_parser);
+        getToken( );
         
         block(lex + 1);
         
@@ -319,9 +320,9 @@ void block(int lex)    //  Alan
             
         }
         
-        fscanf(ifp, "%d", &token_parser);
+        getToken( );
         
-        translate(2, 0, 0);
+        emit(2, 0, 0);
         
     }
     
@@ -359,7 +360,7 @@ void statement(int lex)    //  Justin
             
         }
         
-        fscanf(ifp, "%d", &token_parser);
+        getToken( );
         
         if (token_parser != becomessymP && valid)
         {
@@ -368,11 +369,11 @@ void statement(int lex)    //  Justin
             
         }
         
-        fscanf(ifp, "%d", &token_parser);
+        getToken( );
         
         expression(lex);
         
-        translate(4, symbol_table[index].level, symbol_table[index].addr);
+        emit(4, symbol_table[index].level, symbol_table[index].addr);
         
     }
     else if (token_parser == callsymP)
@@ -404,9 +405,9 @@ void statement(int lex)    //  Justin
             
         }
         
-        translate(5, symbol_table[index].level, symbol_table[index].addr);
+        emit(5, symbol_table[index].level, symbol_table[index].addr);
         
-        translate(6, lex, 4);
+        emit(6, lex, 4);
         
         fscanf(ifp,"%d", &token_parser);
         
@@ -463,7 +464,7 @@ void statement(int lex)    //  Justin
         
         int c1 = c;
         
-        translate(8, 0, 0);
+        emit(8, 0, 0);
         
         statement( lex);
         
@@ -474,7 +475,7 @@ void statement(int lex)    //  Justin
             
             int c2 = c;
             
-            translate(7, 0, 0);
+            emit(7, 0, 0);
             
             vm_code[c1].m = c;
             
@@ -521,9 +522,9 @@ void statement(int lex)    //  Justin
             
         }
         
-        translate(9, 0, 1);
+        emit(9, 0, 1);
         
-        translate(4, symbol_table[position].level, symbol_table[position].addr);
+        emit(4, symbol_table[position].level, symbol_table[position].addr);
         
         fscanf(ifp,"%d", &token_parser);
         
@@ -532,7 +533,7 @@ void statement(int lex)    //  Justin
     if (token_parser == writesymP)
     {
         
-        fscanf(ifp, "%d", &token_parser);
+        getToken( );
         
         if (token_parser != identsymP && valid)
         {
@@ -558,9 +559,17 @@ void statement(int lex)    //  Justin
             
         }
         
-        translate(3, symbol_table[position].level, symbol_table[position].addr);
+        if (symbol[position] ==  2)
+            
+            emit(3, symbol_table[position].level, symbol_table[position].addr);
+
+
+        else if (symbol[position] ==  1)
+            
+            emit(1, 0, symbol[position].val);
+
         
-        translate(9, 0, 0);
+        emit(9, 0, 0);
         
         fscanf(ifp,"%d", &token_parser);
         
@@ -576,7 +585,7 @@ void statement(int lex)    //  Justin
         
         int c2 = c;
         
-        translate(8, 0, 0);
+        emit(8, 0, 0);
         
         if (token_parser != dosymP && valid)
         {
@@ -596,7 +605,7 @@ void statement(int lex)    //  Justin
         
         statement(lex);
         
-        translate(7, 0, c1);
+        emit(7, 0, c1);
         
         vm_code[c2].m = c;
         
@@ -610,11 +619,11 @@ void condition(int lex)    //  Alan
     if (token_parser == oddsymP)
     {
         
-        fscanf(ifp, "%d", &token_parser);
+        getToken( );
         
         expression(lex);
         
-        translate(2, 0, 6);
+        emit(2, 0, 6);
         
     }
     else
@@ -633,11 +642,11 @@ void condition(int lex)    //  Alan
             
         }
         
-        fscanf(ifp, "%d", &token_parser);
+        getToken( );
         
         expression(lex);
         
-        translate(2, 0, rational - 1);
+        emit(2, 0, rational - 1);
         
     }
     
@@ -653,13 +662,13 @@ void expression(int lex) //    Justin
         
         operation = token_parser;
         
-        fscanf(ifp, "%d", &token_parser);
+        getToken( );
         
         term(lex);
         
         if (operation == minussymP)
         {
-            translate(2, 0, 1);
+            emit(2, 0, 1);
         }
         
     }
@@ -673,20 +682,20 @@ void expression(int lex) //    Justin
         
         operation = token_parser;
         
-        fscanf(ifp, "%d", &token_parser);
+        getToken( );
         
         term(lex);
         
         if (operation == plussymP)
         {
             
-            translate(2, 0, 2);
+            emit(2, 0, 2);
             
         }
         else
         {
             
-            translate(2, 0, 3);
+            emit(2, 0, 3);
             
         }
         
@@ -707,20 +716,20 @@ void term(int lex)   // Alan
         
         operation = token_parser;
         
-        fscanf(ifp, "%d", &token_parser);
+        getToken( );
         
         factor(lex);
         
         if (operation == multsymP)
         {
             
-            translate(2, 0, 4);
+            emit(2, 0, 4);
             
         }
         else
         {
             
-            translate(2, 0, 5);
+            emit(2, 0, 5);
             
         }
         
@@ -745,13 +754,13 @@ void factor(int lex) //    Justin
         if (symbol_table[index].kind == constsymP)
         {
             
-            translate(1, 0, symbol_table[index].val);
+            emit(1, 0, symbol_table[index].val);
             
         }
         else if (symbol_table[index].kind == varsymP)
         {
             
-            translate(3, symbol_table[index].level, symbol_table[index].addr);
+            emit(3, symbol_table[index].level, symbol_table[index].addr);
             
         }
         else if (symbol_table[index].kind == varsymP)
@@ -781,7 +790,7 @@ void factor(int lex) //    Justin
         
         fscanf(ifp, "%d", &val);
         
-        translate(1, 0, val);
+        emit(1, 0, val);
         
         fscanf(ifp,"%d", &token_parser);
         
@@ -902,7 +911,7 @@ int find(char name[])
     
 }
 
-void translate(int op, int l, int m)
+void emit(int op, int l, int m)
 {
     
     if ( c <= MAX_CODE_LENGTH )
@@ -918,6 +927,17 @@ void translate(int op, int l, int m)
     else
         
         error(26);
+    
+}
+
+void getToken()
+{
+    
+    fscanf(ifp, "%d", &token_parser);
+    
+    if (token) = EOF)
+    
+        error(27);
     
 }
 
@@ -1135,6 +1155,14 @@ void error(int err)
         {
             
             printf("Error: Code size has been exceed.\n");
+            
+            break;
+            
+        }
+        case 27:
+        {
+            
+            printf("Error: End of file reached.\n");
             
             break;
             
