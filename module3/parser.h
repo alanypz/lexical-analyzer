@@ -105,9 +105,6 @@ int startParser() {
     fclose(ifp);
     fclose(ofp_parser);
     
-    printf("Number of VM instructions: %d\n", c);      //   bug testing print
-    printf("Number of symbols in symbol table: %d\n", symi);    //   bug testing print
-    
     return (valid == 1) ? 0 : 1;
     
 }
@@ -129,8 +126,6 @@ void program(int lex)
     
     fscanf(ifp, "%d", &token_parser);
     
-    translate(6, lex, 5);
-    
     block(lex);
     
     if (token_parser != periodsymP && valid)
@@ -139,14 +134,14 @@ void program(int lex)
     
     if (valid)
         
-        translate(2, 0, 0);
+        translate(9, 0, 2);
     
 }
 
 void block(int lex)    //  Alan
 {
     
-    int kind, val;
+    int kind, val, j;
     char name[MAX_SIZE_PARSER];
     
     if (token_parser == constsymP)
@@ -230,7 +225,7 @@ void block(int lex)    //  Alan
     if (token_parser == varsymP)
     {
         
-        int j = 4;
+        j = 4;
         
         kind = varsymP;
         
@@ -274,6 +269,8 @@ void block(int lex)    //  Alan
         fscanf(ifp,"%d", &token_parser);
         
     }
+    
+    translate(6, lex, j);
     
     while (token_parser == procsymP)
     {
@@ -433,7 +430,7 @@ void statement(int lex)    //  Justin
         if (token_parser != endsymP && valid)
         {
             
-            error(9);
+            error(19);
             
             return;
             
@@ -689,7 +686,7 @@ void expression(int lex) //    Justin
         else
         {
             
-            translate(2, 0, 4);
+            translate(2, 0, 3);
             
         }
         
