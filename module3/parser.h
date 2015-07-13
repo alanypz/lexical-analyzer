@@ -71,6 +71,7 @@ void term(int lex);
 void factor(int lex);
 void error();
 void getToken();
+void getString(char *str);
 
 void record(int kind, char name[], int val, int level, int addr);  //  Write a new symbol to symbol table.
 int find(char name[]);    //  Searches for an existing symbol in symbol table.
@@ -129,6 +130,10 @@ void program(int lex)
     
     block(lex);
     
+    if ( token_parser == 1000 )
+        
+        printf("STUFF");
+    
     if (token_parser != periodsymP && valid)
         
         error(9);
@@ -165,7 +170,7 @@ void block(int lex)    //  Alan
             else
             {
                 
-                fscanf(ifp, "%s", name);
+                getString(name);
                 
             }
             
@@ -244,7 +249,7 @@ void block(int lex)    //  Alan
             else
             {
                 
-                fscanf(ifp, "%s", name);
+                getString(name);
                 
             }
             
@@ -290,7 +295,7 @@ void block(int lex)    //  Alan
         else
         {
             
-            fscanf(ifp, "%s", name);
+            getString(name);
             
         }
         
@@ -338,7 +343,7 @@ void statement(int lex)    //  Justin
         
         char name[MAX_SIZE_PARSER];
         
-        fscanf(ifp, "%s", name);
+        getString(name);
         
         int index = find(name);
         
@@ -546,7 +551,7 @@ void statement(int lex)    //  Justin
         
         char name[12];
         
-        fscanf(ifp, "%s", name);
+        getString(name);
         
         int position = find(name);
         
@@ -559,15 +564,15 @@ void statement(int lex)    //  Justin
             
         }
         
-        if (symbol[position] ==  2)
+        if (symbol_table[position].kind ==  2)
             
             emit(3, symbol_table[position].level, symbol_table[position].addr);
-        
-        
-        else if (symbol[position] ==  1)
+
+
+        else if (symbol_table[position].kind ==  1)
             
-            emit(1, 0, symbol[position].val);
-        
+            emit(1, 0, symbol_table[position].val);
+
         
         emit(9, 0, 0);
         
@@ -747,7 +752,7 @@ void factor(int lex) //    Justin
     if (token_parser == identsymP)
     {
         
-        fscanf(ifp, "%s", name);
+        getString(name);
         
         index = find(name);
         
@@ -933,11 +938,29 @@ void emit(int op, int l, int m)
 void getToken()
 {
     
-    fscanf(ifp, "%d", &token_parser);
-    
-    if (token) = EOF)
+    if ( !fscanf(ifp, "%d", &token_parser) )
+    {
+        token_parser = 1000
         
         error(27);
+    }
+    
+//    if (valid == 0)
+//        
+//        exit(1);
+    
+}
+
+void getString(char *str)
+{
+    
+    if ( !fscanf(ifp, "%s", str) )
+        
+        error(27);
+    
+    if (valid == 0)
+        
+        exit(1);
     
 }
 
