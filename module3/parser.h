@@ -1,5 +1,5 @@
 //
-//  parser.h
+//  parser.c
 //  Parser & Code Generator
 //
 //  UCF - COP 3402: Systems Software
@@ -562,12 +562,12 @@ void statement(int lex)    //  Justin
         if (symbol[position] ==  2)
             
             emit(3, symbol_table[position].level, symbol_table[position].addr);
-
-
+        
+        
         else if (symbol[position] ==  1)
             
             emit(1, 0, symbol[position].val);
-
+        
         
         emit(9, 0, 0);
         
@@ -763,7 +763,7 @@ void factor(int lex) //    Justin
             emit(3, symbol_table[index].level, symbol_table[index].addr);
             
         }
-        else if (symbol_table[index].kind == varsymP)
+        else if (symbol_table[index].kind == procsymP)
         {
             
             error(21);
@@ -936,7 +936,7 @@ void getToken()
     fscanf(ifp, "%d", &token_parser);
     
     if (token) = EOF)
-    
+        
         error(27);
     
 }
