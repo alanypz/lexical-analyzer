@@ -112,17 +112,17 @@ FILE* fileRead(char* fileName, char mode)
 /*		Find base L levels down  		 */
 /*							           */
 /**********************************************/
- 
+
 int base(int l, int base, int stack[]) // l stand for L in the instruction format
-{  
-  int b1; //find base L levels down
-  b1 = base; 
-  while (l > 0)
-  {
-    b1 = stack[b1 + 2];
-    l--;
-  }
-  return b1;
+{
+    int b1; //find base L levels down
+    b1 = base;
+    while (l > 0)
+    {
+        b1 = stack[b1 + 2];
+        l--;
+    }
+    return b1;
 }
 
 /*
@@ -149,7 +149,7 @@ void doIt(FILE* ptr)
     //Execute instructions
     performInstruction(code, stack, cpuRegisters, maxPc);
     
-    return;    
+    return;
 }
 
 /*
@@ -188,7 +188,7 @@ void initializeInstructionArray(instruction* code, FILE* ptr)
         fscanf(ptr, "%d %d %d", &code[i].op, &code[i].l, &code[i].m);
         strcpy(code[i].instructionName, getInstructionName(code[i].op));
     }
-
+    
     return;
 }
 
@@ -295,7 +295,7 @@ void performInstruction(instruction* code, int* stack, registerFile cpuRegisters
                         cpuRegisters.sp -= 1;
                         stack[cpuRegisters.sp] += stack[cpuRegisters.sp + 1];
                         break;
-                    
+                        
                     case 3 :
                         //SUB
                         cpuRegisters.sp -= 1;
@@ -424,7 +424,7 @@ void performInstruction(instruction* code, int* stack, registerFile cpuRegisters
             case 9 :
                 //sio
                 switch(cpuRegisters.ir.m){
-                    
+                        
                     case 0 :
                         //printf("%d", stack[cpuRegisters.sp]);
                         cpuRegisters.sp -= 1;
@@ -444,24 +444,24 @@ void performInstruction(instruction* code, int* stack, registerFile cpuRegisters
                 cpuRegisters.pc+=1;
                 break;
             default:
-                break;   
-        } 
+                break;
+        }
         
-    if(cpuRegisters.ir.op == 9 && cpuRegisters.ir.m == 1)
-    {
-        printf("Enter value to push onto the stack: ");
-        scanf("%d", &stack[cpuRegisters.sp]); 
-        printInstruction(cpuRegisters.ir, cpuRegisters.pc - 1);
-    }
-
-    printPcBpSp(cpuRegisters);
-    printStack(stack, cpuRegisters.sp, basePointers);
-    
-    if(cpuRegisters.ir.op == 9 && cpuRegisters.ir.m == 0)
-    {
-        printf("The value popped from the stack was %d\n", stack[cpuRegisters.sp + 1]);
-    }
-    
+        if(cpuRegisters.ir.op == 9 && cpuRegisters.ir.m == 1)
+        {
+            printf("Enter value to push onto the stack: ");
+            scanf("%d", &stack[cpuRegisters.sp]);
+            printInstruction(cpuRegisters.ir, cpuRegisters.pc - 1);
+        }
+        
+        printPcBpSp(cpuRegisters);
+        printStack(stack, cpuRegisters.sp, basePointers);
+        
+        if(cpuRegisters.ir.op == 9 && cpuRegisters.ir.m == 0)
+        {
+            printf("The value popped from the stack was %d\n", stack[cpuRegisters.sp + 1]);
+        }
+        
     }
 }
 
@@ -473,7 +473,7 @@ void performInstruction(instruction* code, int* stack, registerFile cpuRegisters
 void printInstruction(instruction currentInstruction, int pc)
 {
     fprintf(optr,"%2d %6s %3d\t %2d    ", pc, currentInstruction.instructionName,
-                                    currentInstruction.l, currentInstruction.m);                                
+            currentInstruction.l, currentInstruction.m);
 }
 
 /*
@@ -504,15 +504,15 @@ void printStack(int* stack, int stackSize, int* bp)
         
         fprintf(optr,"%d ", stack[i]);
     }
-        
+    
     fprintf(optr,"\n");
     return;
 }
-    
-    
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+

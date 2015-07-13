@@ -1,5 +1,5 @@
 //
-//  parser.c
+//  parser.h
 //  Parser & Code Generator
 //
 //  UCF - COP 3402: Systems Software
@@ -564,15 +564,14 @@ void statement(int lex)    //  Justin
             
         }
         
-        if (symbol_table[position].kind ==  2)
+        if (symbol_table[position].kind ==  varsymP)
             
             emit(3, symbol_table[position].level, symbol_table[position].addr);
-
-
-        else if (symbol_table[position].kind ==  1)
+        
+        else if (symbol_table[position].kind ==  constsymP)
             
             emit(1, 0, symbol_table[position].val);
-
+        
         
         emit(9, 0, 0);
         
@@ -938,29 +937,21 @@ void emit(int op, int l, int m)
 void getToken()
 {
     
-    if ( !fscanf(ifp, "%d", &token_parser) )
+    fscanf(ifp, "%d", &token_parser);
+    
+    if (!feof(ifp) && !(token_parser <= elsesymP) && !(token_parser >= nulsymP))
     {
-        token_parser = 1000
         
         error(27);
+        
     }
-    
-//    if (valid == 0)
-//        
-//        exit(1);
     
 }
 
 void getString(char *str)
 {
     
-    if ( !fscanf(ifp, "%s", str) )
-        
-        error(27);
-    
-    if (valid == 0)
-        
-        exit(1);
+    fscanf(ifp, "%s", str);
     
 }
 
@@ -1187,7 +1178,7 @@ void error(int err)
             
             printf("Error: End of file reached.\n");
             
-            break;
+            exit(1);
             
         }
         default:
@@ -1195,5 +1186,7 @@ void error(int err)
             printf("Error: Error not vald=id.\n");    //bug
             
     }
+    
+    exit(1);
     
 }

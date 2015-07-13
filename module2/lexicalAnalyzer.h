@@ -1,5 +1,5 @@
 //
-//  lexicalAnalyzer.c
+//  lexicalAnalyzer.h
 //  Lexical Analyzer
 //
 //  UCF - COP 3402: Systems Software
@@ -332,7 +332,7 @@ token* tokenize(char * code)
                 {
                     
                     this->class = identsym;
-                    state = writeState;
+                    state = wState;
                     
                 }
                 else if ( ch == 'v' )
@@ -470,7 +470,7 @@ token* tokenize(char * code)
                         {
                             
                             this = createToken(head, &state, &j);
-                    
+                            
                             continue;
                             
                         }
@@ -492,7 +492,7 @@ token* tokenize(char * code)
                     {
                         
                         this = createToken(head, &state, &j);
-                    
+                        
                         continue;
                         
                     }
@@ -1055,8 +1055,8 @@ token* tokenize(char * code)
                     
                 }
                 
-                char* str1 = "call";
-                char* str2 = "const";
+                char* str1 = "while";
+                char* str2 = "write";
                 
                 this->lexeme[j] = ch;
                 this->lexeme[j+1] = '\0';
@@ -1064,13 +1064,13 @@ token* tokenize(char * code)
                 if ( ch == str1[j] )
                 {
                     
-                    state = callState;
+                    state = whileState;
                     
                 }
                 else if ( ch == str2[j] )
                 {
                     
-                    state = constState;
+                    state = writeState;
                     
                 }
                 else
@@ -1105,10 +1105,10 @@ token* tokenize(char * code)
                 {
                     
                     if ( strncmp(this->lexeme, str, strlen(str)) == 0 &&
-                        !isNumber(code[i+1]) && !isLetter(code[i+1]) )
+                        !isNumber(code[i+1]) && !isLetter(code[i+1]))
                     {
                         
-                        this->class = readsym;
+                        this->class = whilesym;
                         this = createToken(head, &state, &j);
                         
                         break;
@@ -1149,7 +1149,7 @@ token* tokenize(char * code)
                         !isNumber(code[i+1]) && !isLetter(code[i+1]) )
                     {
                         
-                        this->class = readsym;
+                        this->class = writesym;
                         this = createToken(head, &state, &j);
                         
                         break;
@@ -1434,7 +1434,7 @@ void print(token *lexemes)
         fprintf(ofpL,"%d ", this->class);
         
         if ( this->class == 2 || this->class == 3 )
-    
+            
             fprintf(ofpL,"%s ", this->lexeme);
         
         this = this->next;

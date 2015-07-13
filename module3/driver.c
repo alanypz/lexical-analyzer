@@ -38,7 +38,7 @@ int main(int argc, const char * argv[])
             
             if (startVM() == 0)    //  Run vm.c
             {
-            
+                
                 printToScreen("stacktrace.txt",virtualMachine, argc, argv);
                 
             }
@@ -65,32 +65,31 @@ int main(int argc, const char * argv[])
         
     }
     
-    system("pause");
 }
 
 void printToScreen(char* filename, char* command, int argc, const char * argv[])
 {
-
-
+    
+    
     char c;
     int i, found = 0;
-
+    
     FILE *fp = fopen(filename,"r");
-
+    
     for (i = 0; i < argc; i++)
     {
-
+        
         found = (strcmp(argv[i], command) == 0) ? 1 : 0;
-
+        
     }
-
+    
     if (found == 1)
-
-        break;
+        
+        return;
     
     while ((c = fgetc(fp)) != EOF)
     {
-            
+        
         putchar(c);
         
     }
