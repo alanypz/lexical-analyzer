@@ -20,28 +20,46 @@ void printToScreen(char* filename, char* command, int argc, const char * argv[])
 int main(int argc, const char * argv[])
 {
     
-    char lexemes[2] = "-l";
-    char assemblyCode[2] = "-a";
-    char virtualMachine[2] = "-v";
+    char* lexemes = "-l";
+    char* assemblyCode = "-a";
+    char* virtualMachine = "-v";
+    
+    int i = 0;
     
     //  Execute program files.
     
     if (startLex() == 0)    //  Run lexicalAnalyzer.c
     {
-        
-        printToScreen("lexemetable.txt", lexemes, argc, argv);
+        for(i = 0; i < argc; i++)
+        {
+            if(strcmp(lexemes,argv[i]) == 0)
+            
+                printToScreen("lexemetable.txt", lexemes, argc, argv);
+            
+        }
         
         if (startParser() == 0)    //  Run parser.c
         {
             
-            printToScreen("mcode.txt", assemblyCode, argc, argv);
+            for(i = 0; i < argc; i++)
+            {
+                if(strcmp(assemblyCode,argv[i]) == 0)
+        
+                    printToScreen("mcode.txt", assemblyCode, argc, argv);
+                    
+            }
             
             if (startVM() == 0)    //  Run vm.c
             {
-                
-                printToScreen("stacktrace.txt",virtualMachine, argc, argv);
+                for(i = 0; i < argc; i++)
+                {
+                    if(strcmp(virtualMachine,argv[i]) == 0)
+                    
+                        printToScreen("stacktrace.txt",virtualMachine, argc, argv);
+                }
                 
             }
+            
             else
             {
                 
@@ -72,20 +90,20 @@ void printToScreen(char* filename, char* command, int argc, const char * argv[])
     
     
     char c;
-    int i, found = 0;
+//    int i, found = 0;
     
     FILE *fp = fopen(filename,"r");
     
-    for (i = 0; i < argc; i++)
-    {
-        
-        found = (strcmp(argv[i], command) == 0) ? 1 : 0;
-        
-    }
-    
-    if (found == 1)
-        
-        return;
+    //for (i = 0; i < argc; i++)
+//    {
+//        
+//        found = (strcmp(argv[i], command) == 0) ? 1 : 0;
+//        
+//    }
+//    
+//    if (found == 1)
+//        
+//        return;
     
     while ((c = fgetc(fp)) != EOF)
     {
