@@ -204,7 +204,9 @@ void block(int lex)    //  Alan
             else
             {
                 
-                fscanf(ifp, "%d", &val);
+                getToken( );
+                
+                val = token_parser;
                 
             }
             
@@ -255,7 +257,7 @@ void block(int lex)    //  Alan
             
             record(kind, name, 0,  lex, j);
             
-            fscanf(ifp,"%d", &token_parser);
+            getToken( );
             
             j++;
             
@@ -272,7 +274,7 @@ void block(int lex)    //  Alan
             
         }
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
     }
     
@@ -283,7 +285,7 @@ void block(int lex)    //  Alan
         
         kind = procsymP;
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
         if (token_parser != identsymP && valid)
         {
@@ -384,7 +386,7 @@ void statement(int lex)    //  Justin
     else if (token_parser == callsymP)
     {
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
         if (token_parser != identsymP && valid)
         {
@@ -397,7 +399,7 @@ void statement(int lex)    //  Justin
         
         char name[MAX_SIZE_PARSER];
         
-        fscanf(ifp,"%s", name);
+        getString(name );
         
         int index = find(name);
         
@@ -414,20 +416,20 @@ void statement(int lex)    //  Justin
         
         emit(6, lex, 4);
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
     }
     else if (token_parser == beginsymP)
     {
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
         statement(lex);
         
         while (token_parser == semicolonsymP)
         {
             
-            fscanf(ifp,"%d", &token_parser);
+            getToken( );
             
             statement(lex);
             
@@ -442,13 +444,13 @@ void statement(int lex)    //  Justin
             
         }
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
     }
     else if (token_parser == ifsymP)
     {
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
         condition(lex);
         
@@ -463,7 +465,7 @@ void statement(int lex)    //  Justin
         else
         {
             
-            fscanf(ifp,"%d", &token_parser);
+            getToken( );
             
         }
         
@@ -476,7 +478,7 @@ void statement(int lex)    //  Justin
         if (token_parser == elsesymP)
         {
             
-            fscanf(ifp,"%d", &token_parser);
+            getToken( );
             
             int c2 = c;
             
@@ -501,7 +503,7 @@ void statement(int lex)    //  Justin
     if (token_parser == readsymP)
     {
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
         if (token_parser != identsymP && valid)
         {
@@ -514,7 +516,7 @@ void statement(int lex)    //  Justin
         
         char name[12];
         
-        fscanf(ifp,"%s", name);
+        getString(name );
         
         int position = find(name);
         
@@ -531,7 +533,7 @@ void statement(int lex)    //  Justin
         
         emit(4, symbol_table[position].level, symbol_table[position].addr);
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
     }
     
@@ -575,7 +577,7 @@ void statement(int lex)    //  Justin
         
         emit(9, 0, 0);
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
     }
     else if (token_parser == whilesymP)
@@ -583,7 +585,7 @@ void statement(int lex)    //  Justin
         
         int c1 = c;
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
         condition(lex);
         
@@ -603,7 +605,7 @@ void statement(int lex)    //  Justin
         else
         {
             
-            fscanf(ifp,"%d", &token_parser);
+            getToken( );
             
         }
         
@@ -785,25 +787,27 @@ void factor(int lex) //    Justin
             
         }
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
     }
     
     else if (token_parser == numbersymP)
     {
         
-        fscanf(ifp, "%d", &val);
+        getToken( );
+        
+        val = token_parser;
         
         emit(1, 0, val);
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
     }
     
     else if (token_parser == lparentsymP)
     {
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
         expression(lex);
         
@@ -816,7 +820,7 @@ void factor(int lex) //    Justin
             
         }
         
-        fscanf(ifp,"%d", &token_parser);
+        getToken( );
         
     }
     
@@ -937,21 +941,31 @@ void emit(int op, int l, int m)
 void getToken()
 {
     
-    fscanf(ifp, "%d", &token_parser);
     
-    if (!feof(ifp) && !(token_parser <= elsesymP) && !(token_parser >= nulsymP))
+    
+    if (!feof(ifp) )
     {
         
-        error(27);
+        fscanf(ifp, "%d", &token_parser);
         
     }
+    else
+        
+        error(27);
     
 }
 
 void getString(char *str)
 {
     
-    fscanf(ifp, "%s", str);
+    if (!feof(ifp))
+        
+    
+        fscanf(ifp, "%s", str);
+    
+    else
+        
+        error(27);
     
 }
 
