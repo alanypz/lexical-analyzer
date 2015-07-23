@@ -259,7 +259,6 @@ void block(int lex)    //  Alan
             
             j++;
             
-            
         }
         while ( token_parser == commasymP );
         
@@ -565,15 +564,16 @@ void statement(int lex)    //  Justin
             return;
             
         }
+
+        int lex_diff = lex - symbol_table[position].level;
         
         if (symbol_table[position].kind ==  varsymP)
             
-            emit(3, symbol_table[position].level, symbol_table[position].addr);
+            emit(3, lex_diff, symbol_table[position].addr);
         
         else if (symbol_table[position].kind ==  constsymP)
             
             emit(1, 0, symbol_table[position].val);
-        
         
         emit(9, 0, 0);
         
