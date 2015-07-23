@@ -297,7 +297,7 @@ void block(int lex)    //  Alan
             
         }
         
-        record(kind, name, 0,  lex, c);
+        record(kind, name, 0,  lex, c+1);
         
         getToken( );
         
@@ -414,7 +414,7 @@ void statement(int lex)    //  Justin
         
         emit(5, symbol_table[index].level, symbol_table[index].addr);
         
-        emit(6, lex, 4);
+        // emit(6, lex, 4);
         
         getToken( );
         
