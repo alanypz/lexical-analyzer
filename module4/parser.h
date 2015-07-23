@@ -378,8 +378,9 @@ void statement(int lex)    //  Justin
         getToken( );
         
         expression(lex);
-        
-        emit(4, symbol_table[index].level, symbol_table[index].addr);
+
+        int lex_diff = lex - symbol_table[index].level;
+        emit(4, lex_diff, symbol_table[index].addr);
         
     }
     else if (token_parser == callsymP)
@@ -530,7 +531,8 @@ void statement(int lex)    //  Justin
         
         emit(9, 0, 1);
         
-        emit(4, symbol_table[position].level, symbol_table[position].addr);
+        int lex_diff = lex - symbol_table[position].level;
+        emit(4, lex_diff, symbol_table[position].addr);
         
         getToken( );
         
@@ -565,12 +567,13 @@ void statement(int lex)    //  Justin
             
         }
 
-        int lex_diff = lex - symbol_table[position].level;
+        
         
         if (symbol_table[position].kind ==  varsymP)
-            
+        {    
+            int lex_diff = lex - symbol_table[position].level;
             emit(3, lex_diff, symbol_table[position].addr);
-        
+        }
         else if (symbol_table[position].kind ==  constsymP)
             
             emit(1, 0, symbol_table[position].val);
@@ -765,8 +768,9 @@ void factor(int lex) //    Justin
         }
         else if (symbol_table[index].kind == varsymP)
         {
-            
-            emit(3, symbol_table[index].level, symbol_table[index].addr);
+
+            int lex_diff = lex - symbol_table[index].level;   
+            emit(3, lex_diff, symbol_table[index].addr);
             
         }
         else if (symbol_table[index].kind == procsymP)
