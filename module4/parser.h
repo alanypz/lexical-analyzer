@@ -296,7 +296,7 @@ void block(int lex)    //  Alan
             
         }
         
-        record(kind, name, 0,  lex, c+1);
+        record(kind, name, 0,  lex, c);//+1);
         
         getToken( );
         
@@ -408,6 +408,15 @@ void statement(int lex)    //  Justin
         {
             
             error(11);
+            
+            return;
+            
+        }
+        
+        else if(symbol_table[index].kind != procsymP)
+        {
+            
+            error(14);
             
             return;
             
@@ -1095,7 +1104,7 @@ void error(int err)
         case 14:
         {
             
-            printf("Error 14: call must be followed by an identifier.\n");
+            printf("Error 14: call must be followed by an procedure identifier.\n");
             
             break;
             
