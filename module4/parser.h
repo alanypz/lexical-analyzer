@@ -330,7 +330,8 @@ void block(int lex)    //  Alan
 
     vm_code[jump_to_block].m = c;   
 
-    emit(6, lex, j);
+    //emit(6, lex, j);
+    emit(6, 0, j);
 
     statement(lex);
     
@@ -412,7 +413,7 @@ void statement(int lex)    //  Justin
             
         }
         
-        emit(5, symbol_table[index].level, symbol_table[index].addr);
+        emit(5, lex -symbol_table[index].level, symbol_table[index].addr);
         
         // emit(6, lex, 4);
         
